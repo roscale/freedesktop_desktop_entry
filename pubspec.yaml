@@ -1,0 +1,17 @@
+name: freedesktop_desktop_entry
+description: A Dart package for parsing freedesktop desktop entries on Linux.
+version: 0.1.0
+repository: https://github.com/roscale/freedesktop_desktop_entry
+issue_tracker: https://github.com/roscale/freedesktop_desktop_entry/issues
+
+environment:
+  sdk: '>=2.18.2 <3.0.0'
+
+dependencies:
+  freezed_annotation: ^2.2.0
+
+dev_dependencies:
+  build_runner: ^2.3.0
+  freezed: ^2.2.0
+  lints: ^2.0.0
+  test: ^1.16.0

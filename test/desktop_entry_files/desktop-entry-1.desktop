@@ -1,0 +1,17 @@
+[Desktop Entry]
+Version=1.0
+
+Name=Test file 1
+Name[fr]=Fichier de test 1
+
+GenericName=Desktop entry file
+
+Comment=Just a file
+Comment[fr_FR]=Juste un fichier
+Comment[fr_BE]=Baguette
+
+Terminal=false
+
+Keywords=File;Desktop
+Keywords[en]=File;Desktop
+Keywords[fr]=Fichier

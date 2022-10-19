@@ -12,6 +12,12 @@ Comment[fr_BE]=Baguette
 
 Terminal=false
 
+Actions =new-window
+
 Keywords=File;Desktop
 Keywords[en]=File;Desktop
 Keywords[fr]=Fichier
+
+[Desktop Action new-window]
+Name = Open new window
+Name[fr] = Ouvrir nouvelle fenêtre

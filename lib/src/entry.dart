@@ -10,7 +10,7 @@ class Entry with _$Entry {
 
   const factory Entry({
     required String value,
-    required Map<Locale, String> localizedValues,
+    @Default({}) Map<Locale, String> localizedValues,
   }) = _Entry;
 
   String localize({

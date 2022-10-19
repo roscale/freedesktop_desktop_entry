@@ -17,6 +17,8 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$LocalizedDesktopEntry {
   Map<String, String> get entries => throw _privateConstructorUsedError;
+  Map<String, Map<String, String>> get actions =>
+      throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $LocalizedDesktopEntryCopyWith<LocalizedDesktopEntry> get copyWith =>
@@ -29,7 +31,8 @@ abstract class $LocalizedDesktopEntryCopyWith<$Res> {
           $Res Function(LocalizedDesktopEntry) then) =
       _$LocalizedDesktopEntryCopyWithImpl<$Res, LocalizedDesktopEntry>;
   @useResult
-  $Res call({Map<String, String> entries});
+  $Res call(
+      {Map<String, String> entries, Map<String, Map<String, String>> actions});
 }
 
 /// @nodoc
@@ -47,12 +50,17 @@ class _$LocalizedDesktopEntryCopyWithImpl<$Res,
   @override
   $Res call({
     Object? entries = null,
+    Object? actions = null,
   }) {
     return _then(_value.copyWith(
       entries: null == entries
           ? _value.entries
           : entries // ignore: cast_nullable_to_non_nullable
               as Map<String, String>,
+      actions: null == actions
+          ? _value.actions
+          : actions // ignore: cast_nullable_to_non_nullable
+              as Map<String, Map<String, String>>,
     ) as $Val);
   }
 }
@@ -65,7 +73,8 @@ abstract class _$$_LocalizedDesktopEntryCopyWith<$Res>
       __$$_LocalizedDesktopEntryCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({Map<String, String> entries});
+  $Res call(
+      {Map<String, String> entries, Map<String, Map<String, String>> actions});
 }
 
 /// @nodoc
@@ -80,12 +89,17 @@ class __$$_LocalizedDesktopEntryCopyWithImpl<$Res>
   @override
   $Res call({
     Object? entries = null,
+    Object? actions = null,
   }) {
     return _then(_$_LocalizedDesktopEntry(
       entries: null == entries
           ? _value._entries
           : entries // ignore: cast_nullable_to_non_nullable
               as Map<String, String>,
+      actions: null == actions
+          ? _value._actions
+          : actions // ignore: cast_nullable_to_non_nullable
+              as Map<String, Map<String, String>>,
     ));
   }
 }
@@ -93,8 +107,11 @@ class __$$_LocalizedDesktopEntryCopyWithImpl<$Res>
 /// @nodoc
 
 class _$_LocalizedDesktopEntry extends _LocalizedDesktopEntry {
-  const _$_LocalizedDesktopEntry({required final Map<String, String> entries})
+  const _$_LocalizedDesktopEntry(
+      {required final Map<String, String> entries,
+      final Map<String, Map<String, String>> actions = const {}})
       : _entries = entries,
+        _actions = actions,
         super._();
 
   final Map<String, String> _entries;
@@ -104,17 +121,33 @@ class _$_LocalizedDesktopEntry extends _LocalizedDesktopEntry {
     return EqualUnmodifiableMapView(_entries);
   }
 
+  final Map<String, Map<String, String>> _actions;
+  @override
+  @JsonKey()
+  Map<String, Map<String, String>> get actions {
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_actions);
+  }
+
+  @override
+  String toString() {
+    return 'LocalizedDesktopEntry(entries: $entries, actions: $actions)';
+  }
+
   @override
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$_LocalizedDesktopEntry &&
-            const DeepCollectionEquality().equals(other._entries, _entries));
+            const DeepCollectionEquality().equals(other._entries, _entries) &&
+            const DeepCollectionEquality().equals(other._actions, _actions));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, const DeepCollectionEquality().hash(_entries));
+  int get hashCode => Object.hash(
+      runtimeType,
+      const DeepCollectionEquality().hash(_entries),
+      const DeepCollectionEquality().hash(_actions));
 
   @JsonKey(ignore: true)
   @override
@@ -126,11 +159,15 @@ class _$_LocalizedDesktopEntry extends _LocalizedDesktopEntry {
 
 abstract class _LocalizedDesktopEntry extends LocalizedDesktopEntry {
   const factory _LocalizedDesktopEntry(
-      {required final Map<String, String> entries}) = _$_LocalizedDesktopEntry;
+          {required final Map<String, String> entries,
+          final Map<String, Map<String, String>> actions}) =
+      _$_LocalizedDesktopEntry;
   const _LocalizedDesktopEntry._() : super._();
 
   @override
   Map<String, String> get entries;
+  @override
+  Map<String, Map<String, String>> get actions;
   @override
   @JsonKey(ignore: true)
   _$$_LocalizedDesktopEntryCopyWith<_$_LocalizedDesktopEntry> get copyWith =>

@@ -17,6 +17,8 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$DesktopEntry {
   Map<String, Entry> get entries => throw _privateConstructorUsedError;
+  Map<String, Map<String, Entry>> get actions =>
+      throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $DesktopEntryCopyWith<DesktopEntry> get copyWith =>
@@ -29,7 +31,8 @@ abstract class $DesktopEntryCopyWith<$Res> {
           DesktopEntry value, $Res Function(DesktopEntry) then) =
       _$DesktopEntryCopyWithImpl<$Res, DesktopEntry>;
   @useResult
-  $Res call({Map<String, Entry> entries});
+  $Res call(
+      {Map<String, Entry> entries, Map<String, Map<String, Entry>> actions});
 }
 
 /// @nodoc
@@ -46,12 +49,17 @@ class _$DesktopEntryCopyWithImpl<$Res, $Val extends DesktopEntry>
   @override
   $Res call({
     Object? entries = null,
+    Object? actions = null,
   }) {
     return _then(_value.copyWith(
       entries: null == entries
           ? _value.entries
           : entries // ignore: cast_nullable_to_non_nullable
               as Map<String, Entry>,
+      actions: null == actions
+          ? _value.actions
+          : actions // ignore: cast_nullable_to_non_nullable
+              as Map<String, Map<String, Entry>>,
     ) as $Val);
   }
 }
@@ -64,7 +72,8 @@ abstract class _$$_DesktopEntryCopyWith<$Res>
       __$$_DesktopEntryCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({Map<String, Entry> entries});
+  $Res call(
+      {Map<String, Entry> entries, Map<String, Map<String, Entry>> actions});
 }
 
 /// @nodoc
@@ -79,12 +88,17 @@ class __$$_DesktopEntryCopyWithImpl<$Res>
   @override
   $Res call({
     Object? entries = null,
+    Object? actions = null,
   }) {
     return _then(_$_DesktopEntry(
       entries: null == entries
           ? _value._entries
           : entries // ignore: cast_nullable_to_non_nullable
               as Map<String, Entry>,
+      actions: null == actions
+          ? _value._actions
+          : actions // ignore: cast_nullable_to_non_nullable
+              as Map<String, Map<String, Entry>>,
     ));
   }
 }
@@ -92,8 +106,11 @@ class __$$_DesktopEntryCopyWithImpl<$Res>
 /// @nodoc
 
 class _$_DesktopEntry extends _DesktopEntry {
-  const _$_DesktopEntry({required final Map<String, Entry> entries})
+  const _$_DesktopEntry(
+      {required final Map<String, Entry> entries,
+      final Map<String, Map<String, Entry>> actions = const {}})
       : _entries = entries,
+        _actions = actions,
         super._();
 
   final Map<String, Entry> _entries;
@@ -103,9 +120,17 @@ class _$_DesktopEntry extends _DesktopEntry {
     return EqualUnmodifiableMapView(_entries);
   }
 
+  final Map<String, Map<String, Entry>> _actions;
+  @override
+  @JsonKey()
+  Map<String, Map<String, Entry>> get actions {
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_actions);
+  }
+
   @override
   String toString() {
-    return 'DesktopEntry(entries: $entries)';
+    return 'DesktopEntry(entries: $entries, actions: $actions)';
   }
 
   @override
@@ -113,12 +138,15 @@ class _$_DesktopEntry extends _DesktopEntry {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$_DesktopEntry &&
-            const DeepCollectionEquality().equals(other._entries, _entries));
+            const DeepCollectionEquality().equals(other._entries, _entries) &&
+            const DeepCollectionEquality().equals(other._actions, _actions));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, const DeepCollectionEquality().hash(_entries));
+  int get hashCode => Object.hash(
+      runtimeType,
+      const DeepCollectionEquality().hash(_entries),
+      const DeepCollectionEquality().hash(_actions));
 
   @JsonKey(ignore: true)
   @override
@@ -128,12 +156,15 @@ class _$_DesktopEntry extends _DesktopEntry {
 }
 
 abstract class _DesktopEntry extends DesktopEntry {
-  const factory _DesktopEntry({required final Map<String, Entry> entries}) =
-      _$_DesktopEntry;
+  const factory _DesktopEntry(
+      {required final Map<String, Entry> entries,
+      final Map<String, Map<String, Entry>> actions}) = _$_DesktopEntry;
   const _DesktopEntry._() : super._();
 
   @override
   Map<String, Entry> get entries;
+  @override
+  Map<String, Map<String, Entry>> get actions;
   @override
   @JsonKey(ignore: true)
   _$$_DesktopEntryCopyWith<_$_DesktopEntry> get copyWith =>

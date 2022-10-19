@@ -98,7 +98,8 @@ class __$$_EntryCopyWithImpl<$Res> extends _$EntryCopyWithImpl<$Res, _$_Entry>
 
 class _$_Entry extends _Entry {
   const _$_Entry(
-      {required this.value, required final Map<Locale, String> localizedValues})
+      {required this.value,
+      final Map<Locale, String> localizedValues = const {}})
       : _localizedValues = localizedValues,
         super._();
 
@@ -106,6 +107,7 @@ class _$_Entry extends _Entry {
   final String value;
   final Map<Locale, String> _localizedValues;
   @override
+  @JsonKey()
   Map<Locale, String> get localizedValues {
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableMapView(_localizedValues);
@@ -140,7 +142,7 @@ class _$_Entry extends _Entry {
 abstract class _Entry extends Entry {
   const factory _Entry(
       {required final String value,
-      required final Map<Locale, String> localizedValues}) = _$_Entry;
+      final Map<Locale, String> localizedValues}) = _$_Entry;
   const _Entry._() : super._();
 
   @override

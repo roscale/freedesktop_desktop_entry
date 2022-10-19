@@ -8,5 +8,6 @@ class LocalizedDesktopEntry with _$LocalizedDesktopEntry {
 
   const factory LocalizedDesktopEntry({
     required Map<String, String> entries,
+    @Default({}) Map<String, Map<String, String>> actions,
   }) = _LocalizedDesktopEntry;
 }

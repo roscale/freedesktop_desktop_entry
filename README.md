@@ -11,48 +11,62 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages).
 -->
 
-A Dart package for parsing freedesktop desktop entries on Linux.
+A Dart package for parsing freedesktop (XDG) desktop entries on Linux.
 
 ## Features
 
-- Obtain values by key
-- Obtain localized values by locale
-- Localize values according to the locale matching rules of the specification.
-- Localize entire desktop entries for easier access.
+- obtain values by key
+- obtain localized values
+- obtain values from action groups
+- localize values according to the locale matching rules of the specification
+- localize entire desktop entries
 
 This package provides the `DesktopEntryKey` enum for convenience, but it doesn't make any assumptions
 about value types and whether a key is required or not. All keys are considered optional.
 
 ## Usage
 
+### Parse a desktop entry file
+
 ```dart
 import 'package:freedesktop_desktop_entry/freedesktop_desktop_entry.dart';
 import 'dart:io';
 
 final file = File("desktop-entry.desktop");
-String content = file.readAsStringSync();
-
+String content = await file.readAsString();
 DesktopEntry desktopEntry = DesktopEntry.parse(content);
+```
 
-// Localize an entire desktop entry according to official locale matching rules.
-// Probably what you want.
+### Localize an entire desktop entry
+
+```dart
 LocalizedDesktopEntry localizedDesktopEntry = desktopEntry.localize(lang: 'fr', country: 'BE');
+```
+
+### Get a localized value
+
+```dart
 String? localizedComment = localizedDesktopEntry.entries[DesktopEntryKey.comment.string];
-print(localizedComment);
+// OR
+String? localizedComment = desktopEntry.entries[DesktopEntryKey.comment.string]?.localize(lang: 'fr', country: 'BE');
+```
+Unless you are only interested in a few fields, prefer localizing the entire desktop entry to avoid having to specify
+the locale every time.
 
-// Get default value of entry.
+The `localize` methods will localize the values according to official locale matching rules, and
+uses the default value if no locale is matched. This is most probably what you want to do.
+
+### Get the default value
+
+```dart
+String? name = desktopEntry.entries[DesktopEntryKey.name.string]?.value;
 bool? terminal = desktopEntry.entries[DesktopEntryKey.terminal.string]?.value.getBoolean();
-print(terminal);
+List<String>? keywords = desktopEntry.entries[DesktopEntryKey.keywords.string]?.value.getStringList();
+bool? startupNotify = desktopEntry.entries['X-KDE-StartupNotify']?.value.getBoolean();
+```
 
-// Get a single localized value by exact locale.
-String? frenchComment =
-desktopEntry.entries[DesktopEntryKey.comment.string]
-    ?.localizedValues[Locale(lang: 'fr', country: 'BE')];
-print(frenchComment);
+### Get a value by exact locale
 
-// Localize a single value according to official locale matching rules.
-List<String>? frenchOrDefaultKeywords = desktopEntry.entries[DesktopEntryKey.keywords.string]
-    ?.localize(lang: 'fr', country: 'BE')
-    .getStringList();
-print(frenchOrDefaultKeywords);
+```dart
+String? frenchComment = desktopEntry.entries[DesktopEntryKey.comment.string]?.localizedValues[Locale(lang: 'fr', country: 'BE')];
 ```

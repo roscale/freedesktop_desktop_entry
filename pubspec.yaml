@@ -1,6 +1,6 @@
 name: freedesktop_desktop_entry
-description: A Dart package for parsing freedesktop desktop entries on Linux.
-version: 0.2.0
+description: A Dart package for parsing freedesktop (XDG) desktop entries on Linux.
+version: 0.2.1
 repository: https://github.com/roscale/freedesktop_desktop_entry
 issue_tracker: https://github.com/roscale/freedesktop_desktop_entry/issues
 

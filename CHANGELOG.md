@@ -9,3 +9,7 @@
 ## 0.2.1
 
 - Improve the `README` and add examples.
+
+## 0.2.2
+
+- Fix entry parsing when the value contains '='.

@@ -105,7 +105,7 @@ Map<String, Entry> _parseEntries(List<String> entryLines) {
   final mapEntries = entryLines.map((line) {
     final tokens = line.split('=');
     final key = tokens[0].trim();
-    final value = tokens.skip(1).join().trim();
+    final value = tokens.skip(1).join('=').trim();
     return MapEntry(key, value);
   });
 

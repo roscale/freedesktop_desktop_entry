@@ -10,14 +10,16 @@ extension EntryValueType on String {
     }
   }
 
-  List<String> getStringList() {
-    final nonEscapedSemicolons = RegExp(r'(?<!\\);');
+  List<String> getStringList([String delimiter = ';']) {
+    final nonEscapedSemicolons = RegExp(r'(?<!\\)' + delimiter);
     final values = split(nonEscapedSemicolons);
     if (values.last.isEmpty) {
-      // Optional ending ';'.
+      // Optional ending delimiter.
       values.removeLast();
     }
-    // Unescape ';' in list items.
-    return values.map((e) => e.replaceAll(r'\;', ';')).toList();
+    // Unescape delimiters in list items.
+    return values.map((e) => e.replaceAll(r'\' + delimiter, delimiter)).toList();
   }
+
+  int? getInteger() => int.tryParse(this);
 }

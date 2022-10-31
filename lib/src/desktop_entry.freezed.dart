@@ -16,7 +16,11 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$DesktopEntry {
+  /// Entries from `[Desktop Entry]`.
   Map<String, Entry> get entries => throw _privateConstructorUsedError;
+
+  /// Actions with their entries.
+  /// A section named `[Desktop Action xyz]` has key `xyz`.
   Map<String, Map<String, Entry>> get actions =>
       throw _privateConstructorUsedError;
 
@@ -113,14 +117,22 @@ class _$_DesktopEntry extends _DesktopEntry {
         _actions = actions,
         super._();
 
+  /// Entries from `[Desktop Entry]`.
   final Map<String, Entry> _entries;
+
+  /// Entries from `[Desktop Entry]`.
   @override
   Map<String, Entry> get entries {
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableMapView(_entries);
   }
 
+  /// Actions with their entries.
+  /// A section named `[Desktop Action xyz]` has key `xyz`.
   final Map<String, Map<String, Entry>> _actions;
+
+  /// Actions with their entries.
+  /// A section named `[Desktop Action xyz]` has key `xyz`.
   @override
   @JsonKey()
   Map<String, Map<String, Entry>> get actions {
@@ -162,8 +174,13 @@ abstract class _DesktopEntry extends DesktopEntry {
   const _DesktopEntry._() : super._();
 
   @override
+
+  /// Entries from `[Desktop Entry]`.
   Map<String, Entry> get entries;
   @override
+
+  /// Actions with their entries.
+  /// A section named `[Desktop Action xyz]` has key `xyz`.
   Map<String, Map<String, Entry>> get actions;
   @override
   @JsonKey(ignore: true)

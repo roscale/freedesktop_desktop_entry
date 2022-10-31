@@ -13,52 +13,34 @@ class DesktopEntry with _$DesktopEntry {
   const DesktopEntry._();
 
   const factory DesktopEntry({
+    /// Entries from `[Desktop Entry]`.
     required Map<String, Entry> entries,
+
+    /// Actions with their entries.
+    /// A section named `[Desktop Action xyz]` has key `xyz`.
     @Default({}) Map<String, Map<String, Entry>> actions,
   }) = _DesktopEntry;
 
   factory DesktopEntry.parse(String source) {
-    var lines = source.split('\n');
+    Map<String, Map<String, Entry>> sections = parseSections(source);
 
-    lines = lines.map((String line) {
-      return line.trim();
-    }).where((String line) {
-      // Remove empty lines and comments.
-      return line.isNotEmpty && !line.startsWith('#');
-    }).toList();
+    Map<String, Entry> entries = sections["Desktop Entry"] ?? {};
+    Map<String, Map<String, Entry>> actions = {};
 
-    final List<String> entryLines = [];
-    final Map<String, List<String>> actionLines = {};
-
-    List<String>? list;
-    for (final line in lines) {
-      if (line == '[Desktop Entry]') {
-        list = entryLines;
-        continue;
-      }
-
-      final actionRegex = RegExp(r'^\[Desktop Action (?<action>[ -~]+)\]$');
-      final match = actionRegex.firstMatch(line);
+    for (final entry in sections.entries) {
+      final actionRegex = RegExp(r'^Desktop Action (?<action>[ -~]+)$');
+      final match = actionRegex.firstMatch(entry.key);
       if (match != null) {
         final actionName = match.namedGroup('action')!;
-        list = actionLines.putIfAbsent(actionName, () => []);
+        actions.putIfAbsent(actionName, () => entry.value);
         continue;
       }
-
-      list?.add(line);
     }
-
-    Map<String, Entry> entries = _parseEntries(entryLines);
 
     // It is not valid to have an action group for an action identifier not mentioned in the Actions key.
     // These actions must be ignored.
-    final List<String>? declaredActions =
-        entries[DesktopEntryKey.actions.string]?.value.getStringList();
-    actionLines.removeWhere(
-        (actionName, _) => !(declaredActions?.contains(actionName) ?? false));
-
-    Map<String, Map<String, Entry>> actions =
-        actionLines.map((key, value) => MapEntry(key, _parseEntries(value)));
+    final List<String>? declaredActions = entries[DesktopEntryKey.actions.string]?.value.getStringList();
+    actions.removeWhere((actionName, _) => !(declaredActions?.contains(actionName) ?? false));
 
     return DesktopEntry(entries: entries, actions: actions);
   }
@@ -94,12 +76,41 @@ class DesktopEntry with _$DesktopEntry {
         ),
       ),
     );
-    return LocalizedDesktopEntry(
-        entries: localizedEntries, actions: localizedActions);
+    return LocalizedDesktopEntry(entries: localizedEntries, actions: localizedActions);
   }
 }
 
-Map<String, Entry> _parseEntries(List<String> entryLines) {
+Map<String, Map<String, Entry>> parseSections(String source) {
+  var lines = source.split('\n');
+
+  lines = lines.map((String line) {
+    return line.trim();
+  }).where((String line) {
+    // Remove empty lines and comments.
+    return line.isNotEmpty && !line.startsWith('#') && !line.startsWith(';');
+  }).toList();
+
+  final Map<String, List<String>> sectionLines = {};
+
+  List<String>? list;
+  for (final line in lines) {
+    final sectionRegex = RegExp(r'^\[(?<section>.*)\]$');
+    final match = sectionRegex.firstMatch(line);
+    if (match != null) {
+      final sectionName = match.namedGroup('section')!;
+      list = sectionLines.putIfAbsent(sectionName, () => []);
+      continue;
+    }
+
+    list?.add(line);
+  }
+
+  Map<String, Map<String, Entry>> sections = sectionLines.map((key, value) => MapEntry(key, parseEntries(value)));
+
+  return sections;
+}
+
+Map<String, Entry> parseEntries(List<String> entryLines) {
   Map<String, Entry> entries = {};
 
   final mapEntries = entryLines.map((line) {
@@ -110,8 +121,7 @@ Map<String, Entry> _parseEntries(List<String> entryLines) {
   });
 
   for (MapEntry<String, String> rawEntry in mapEntries) {
-    final keyRegex =
-        RegExp(r'^(?<name>[A-Za-z0-9-]+)(:?\[(?<locale>[A-Za-z0-9-_.@]+)\])?$');
+    final keyRegex = RegExp(r'^(?<name>[A-Za-z0-9-]+)(:?\[(?<locale>[A-Za-z0-9-_.@]+)\])?$');
     var match = keyRegex.firstMatch(rawEntry.key);
 
     String? name = match?.namedGroup('name');
@@ -121,8 +131,7 @@ Map<String, Entry> _parseEntries(List<String> entryLines) {
       continue;
     }
 
-    Entry getEntry(String name) =>
-        entries.putIfAbsent(name, () => Entry(value: ''));
+    Entry getEntry(String name) => entries.putIfAbsent(name, () => Entry(value: ''));
 
     if (locale == null) {
       // Default value.
@@ -150,11 +159,7 @@ Map<String, Entry> _parseEntries(List<String> entryLines) {
     entries[name] = entry.copyWith(
       localizedValues: {
         ...entry.localizedValues,
-        Locale(
-            lang: lang,
-            country: country,
-            encoding: encoding,
-            modifier: modifier): rawEntry.value,
+        Locale(lang: lang, country: country, encoding: encoding, modifier: modifier): rawEntry.value,
       },
     );
   }

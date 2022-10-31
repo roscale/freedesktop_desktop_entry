@@ -20,6 +20,7 @@ A Dart package for parsing freedesktop (XDG) desktop entries on Linux.
 - obtain values from action groups
 - localize values according to the locale matching rules of the specification
 - localize entire desktop entries
+- icon lookup
 
 This package provides the `DesktopEntryKey` enum for convenience, but it doesn't make any assumptions
 about value types and whether a key is required or not. All keys are considered optional.
@@ -70,3 +71,12 @@ bool? startupNotify = desktopEntry.entries['X-KDE-StartupNotify']?.value.getBool
 ```dart
 String? frenchComment = desktopEntry.entries[DesktopEntryKey.comment.string]?.localizedValues[Locale(lang: 'fr', country: 'BE')];
 ```
+
+### Find an icon
+
+```dart
+IconTheme iconTheme = await IconTheme.load('Adwaita');
+File? file = iconTheme.findIcon(name: 'firefox', size: 32, scale: 2, extensions: {'png'});
+```
+
+If a new icon is added to the filesystem, you have to reload the icon theme to find it.

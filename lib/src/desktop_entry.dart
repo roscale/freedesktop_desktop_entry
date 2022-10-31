@@ -39,8 +39,10 @@ class DesktopEntry with _$DesktopEntry {
 
     // It is not valid to have an action group for an action identifier not mentioned in the Actions key.
     // These actions must be ignored.
-    final List<String>? declaredActions = entries[DesktopEntryKey.actions.string]?.value.getStringList();
-    actions.removeWhere((actionName, _) => !(declaredActions?.contains(actionName) ?? false));
+    final List<String>? declaredActions =
+        entries[DesktopEntryKey.actions.string]?.value.getStringList();
+    actions.removeWhere(
+        (actionName, _) => !(declaredActions?.contains(actionName) ?? false));
 
     return DesktopEntry(entries: entries, actions: actions);
   }
@@ -76,7 +78,8 @@ class DesktopEntry with _$DesktopEntry {
         ),
       ),
     );
-    return LocalizedDesktopEntry(entries: localizedEntries, actions: localizedActions);
+    return LocalizedDesktopEntry(
+        entries: localizedEntries, actions: localizedActions);
   }
 }
 
@@ -105,7 +108,8 @@ Map<String, Map<String, Entry>> parseSections(String source) {
     list?.add(line);
   }
 
-  Map<String, Map<String, Entry>> sections = sectionLines.map((key, value) => MapEntry(key, parseEntries(value)));
+  Map<String, Map<String, Entry>> sections =
+      sectionLines.map((key, value) => MapEntry(key, parseEntries(value)));
 
   return sections;
 }
@@ -121,7 +125,8 @@ Map<String, Entry> parseEntries(List<String> entryLines) {
   });
 
   for (MapEntry<String, String> rawEntry in mapEntries) {
-    final keyRegex = RegExp(r'^(?<name>[A-Za-z0-9-]+)(:?\[(?<locale>[A-Za-z0-9-_.@]+)\])?$');
+    final keyRegex =
+        RegExp(r'^(?<name>[A-Za-z0-9-]+)(:?\[(?<locale>[A-Za-z0-9-_.@]+)\])?$');
     var match = keyRegex.firstMatch(rawEntry.key);
 
     String? name = match?.namedGroup('name');
@@ -131,7 +136,8 @@ Map<String, Entry> parseEntries(List<String> entryLines) {
       continue;
     }
 
-    Entry getEntry(String name) => entries.putIfAbsent(name, () => Entry(value: ''));
+    Entry getEntry(String name) =>
+        entries.putIfAbsent(name, () => Entry(value: ''));
 
     if (locale == null) {
       // Default value.
@@ -159,7 +165,11 @@ Map<String, Entry> parseEntries(List<String> entryLines) {
     entries[name] = entry.copyWith(
       localizedValues: {
         ...entry.localizedValues,
-        Locale(lang: lang, country: country, encoding: encoding, modifier: modifier): rawEntry.value,
+        Locale(
+            lang: lang,
+            country: country,
+            encoding: encoding,
+            modifier: modifier): rawEntry.value,
       },
     );
   }

@@ -13,3 +13,7 @@
 ## 0.2.2
 
 - Fix entry parsing when the value contains '='.
+
+## 0.3.0
+
+- Add support for icon lookup.

@@ -15,40 +15,41 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
 
 /// @nodoc
-mixin _$IconTheme {
+mixin _$_IconTheme {
   String get name => throw _privateConstructorUsedError;
 
   /// Entries from `[Icon Theme]`.
   Map<String, Entry> get entries => throw _privateConstructorUsedError;
-  List<IconTheme> get parents => throw _privateConstructorUsedError;
+  List<_IconTheme> get parents => throw _privateConstructorUsedError;
 
   /// Directory sections with their entries.
-  Map<String, IconDirectory> get directories =>
+  Map<String, _IconDirectory> get directories =>
       throw _privateConstructorUsedError;
-  IconThemeCache get cache => throw _privateConstructorUsedError;
+  _IconThemeCache get cache => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
-  $IconThemeCopyWith<IconTheme> get copyWith =>
+  _$IconThemeCopyWith<_IconTheme> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $IconThemeCopyWith<$Res> {
-  factory $IconThemeCopyWith(IconTheme value, $Res Function(IconTheme) then) =
-      _$IconThemeCopyWithImpl<$Res, IconTheme>;
+abstract class _$IconThemeCopyWith<$Res> {
+  factory _$IconThemeCopyWith(
+          _IconTheme value, $Res Function(_IconTheme) then) =
+      __$IconThemeCopyWithImpl<$Res, _IconTheme>;
   @useResult
   $Res call(
       {String name,
       Map<String, Entry> entries,
-      List<IconTheme> parents,
-      Map<String, IconDirectory> directories,
-      IconThemeCache cache});
+      List<_IconTheme> parents,
+      Map<String, _IconDirectory> directories,
+      _IconThemeCache cache});
 }
 
 /// @nodoc
-class _$IconThemeCopyWithImpl<$Res, $Val extends IconTheme>
-    implements $IconThemeCopyWith<$Res> {
-  _$IconThemeCopyWithImpl(this._value, this._then);
+class __$IconThemeCopyWithImpl<$Res, $Val extends _IconTheme>
+    implements _$IconThemeCopyWith<$Res> {
+  __$IconThemeCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -76,40 +77,41 @@ class _$IconThemeCopyWithImpl<$Res, $Val extends IconTheme>
       parents: null == parents
           ? _value.parents
           : parents // ignore: cast_nullable_to_non_nullable
-              as List<IconTheme>,
+              as List<_IconTheme>,
       directories: null == directories
           ? _value.directories
           : directories // ignore: cast_nullable_to_non_nullable
-              as Map<String, IconDirectory>,
+              as Map<String, _IconDirectory>,
       cache: null == cache
           ? _value.cache
           : cache // ignore: cast_nullable_to_non_nullable
-              as IconThemeCache,
+              as _IconThemeCache,
     ) as $Val);
   }
 }
 
 /// @nodoc
-abstract class _$$_IconThemeCopyWith<$Res> implements $IconThemeCopyWith<$Res> {
-  factory _$$_IconThemeCopyWith(
-          _$_IconTheme value, $Res Function(_$_IconTheme) then) =
-      __$$_IconThemeCopyWithImpl<$Res>;
+abstract class _$$___IconThemeCopyWith<$Res>
+    implements _$IconThemeCopyWith<$Res> {
+  factory _$$___IconThemeCopyWith(
+          _$___IconTheme value, $Res Function(_$___IconTheme) then) =
+      __$$___IconThemeCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
       {String name,
       Map<String, Entry> entries,
-      List<IconTheme> parents,
-      Map<String, IconDirectory> directories,
-      IconThemeCache cache});
+      List<_IconTheme> parents,
+      Map<String, _IconDirectory> directories,
+      _IconThemeCache cache});
 }
 
 /// @nodoc
-class __$$_IconThemeCopyWithImpl<$Res>
-    extends _$IconThemeCopyWithImpl<$Res, _$_IconTheme>
-    implements _$$_IconThemeCopyWith<$Res> {
-  __$$_IconThemeCopyWithImpl(
-      _$_IconTheme _value, $Res Function(_$_IconTheme) _then)
+class __$$___IconThemeCopyWithImpl<$Res>
+    extends __$IconThemeCopyWithImpl<$Res, _$___IconTheme>
+    implements _$$___IconThemeCopyWith<$Res> {
+  __$$___IconThemeCopyWithImpl(
+      _$___IconTheme _value, $Res Function(_$___IconTheme) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -121,7 +123,7 @@ class __$$_IconThemeCopyWithImpl<$Res>
     Object? directories = null,
     Object? cache = null,
   }) {
-    return _then(_$_IconTheme(
+    return _then(_$___IconTheme(
       name: null == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
@@ -133,27 +135,27 @@ class __$$_IconThemeCopyWithImpl<$Res>
       parents: null == parents
           ? _value._parents
           : parents // ignore: cast_nullable_to_non_nullable
-              as List<IconTheme>,
+              as List<_IconTheme>,
       directories: null == directories
           ? _value._directories
           : directories // ignore: cast_nullable_to_non_nullable
-              as Map<String, IconDirectory>,
+              as Map<String, _IconDirectory>,
       cache: null == cache
           ? _value.cache
           : cache // ignore: cast_nullable_to_non_nullable
-              as IconThemeCache,
+              as _IconThemeCache,
     ));
   }
 }
 
 /// @nodoc
 
-class _$_IconTheme extends _IconTheme {
-  const _$_IconTheme(
+class _$___IconTheme extends ___IconTheme {
+  const _$___IconTheme(
       {required this.name,
       required final Map<String, Entry> entries,
-      final List<IconTheme> parents = const [],
-      final Map<String, IconDirectory> directories = const {},
+      final List<_IconTheme> parents = const [],
+      final Map<String, _IconDirectory> directories = const {},
       required this.cache})
       : _entries = entries,
         _parents = parents,
@@ -173,38 +175,38 @@ class _$_IconTheme extends _IconTheme {
     return EqualUnmodifiableMapView(_entries);
   }
 
-  final List<IconTheme> _parents;
+  final List<_IconTheme> _parents;
   @override
   @JsonKey()
-  List<IconTheme> get parents {
+  List<_IconTheme> get parents {
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_parents);
   }
 
   /// Directory sections with their entries.
-  final Map<String, IconDirectory> _directories;
+  final Map<String, _IconDirectory> _directories;
 
   /// Directory sections with their entries.
   @override
   @JsonKey()
-  Map<String, IconDirectory> get directories {
+  Map<String, _IconDirectory> get directories {
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableMapView(_directories);
   }
 
   @override
-  final IconThemeCache cache;
+  final _IconThemeCache cache;
 
   @override
   String toString() {
-    return 'IconTheme(name: $name, entries: $entries, parents: $parents, directories: $directories, cache: $cache)';
+    return '_IconTheme(name: $name, entries: $entries, parents: $parents, directories: $directories, cache: $cache)';
   }
 
   @override
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$_IconTheme &&
+            other is _$___IconTheme &&
             (identical(other.name, name) || other.name == name) &&
             const DeepCollectionEquality().equals(other._entries, _entries) &&
             const DeepCollectionEquality().equals(other._parents, _parents) &&
@@ -225,18 +227,18 @@ class _$_IconTheme extends _IconTheme {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$_IconThemeCopyWith<_$_IconTheme> get copyWith =>
-      __$$_IconThemeCopyWithImpl<_$_IconTheme>(this, _$identity);
+  _$$___IconThemeCopyWith<_$___IconTheme> get copyWith =>
+      __$$___IconThemeCopyWithImpl<_$___IconTheme>(this, _$identity);
 }
 
-abstract class _IconTheme extends IconTheme {
-  const factory _IconTheme(
+abstract class ___IconTheme extends _IconTheme {
+  const factory ___IconTheme(
       {required final String name,
       required final Map<String, Entry> entries,
-      final List<IconTheme> parents,
-      final Map<String, IconDirectory> directories,
-      required final IconThemeCache cache}) = _$_IconTheme;
-  const _IconTheme._() : super._();
+      final List<_IconTheme> parents,
+      final Map<String, _IconDirectory> directories,
+      required final _IconThemeCache cache}) = _$___IconTheme;
+  const ___IconTheme._() : super._();
 
   @override
   String get name;
@@ -245,15 +247,15 @@ abstract class _IconTheme extends IconTheme {
   /// Entries from `[Icon Theme]`.
   Map<String, Entry> get entries;
   @override
-  List<IconTheme> get parents;
+  List<_IconTheme> get parents;
   @override
 
   /// Directory sections with their entries.
-  Map<String, IconDirectory> get directories;
+  Map<String, _IconDirectory> get directories;
   @override
-  IconThemeCache get cache;
+  _IconThemeCache get cache;
   @override
   @JsonKey(ignore: true)
-  _$$_IconThemeCopyWith<_$_IconTheme> get copyWith =>
+  _$$___IconThemeCopyWith<_$___IconTheme> get copyWith =>
       throw _privateConstructorUsedError;
 }

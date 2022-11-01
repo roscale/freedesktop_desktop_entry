@@ -48,10 +48,12 @@ void main() {
 
   test('icon theme', () async {
     final iconTheme = await IconTheme.load('Adwaita');
-    File? file = iconTheme
-        .findIcon(name: 'input-touchpad', size: 32, extensions: {'png'});
-    assert(file != null);
-    assert(file!.path ==
-        '/usr/share/icons/hicolor/32x32/devices/input-touchpad.png');
+    for (int i = 0; i < 1000; i++) {
+      File? file = iconTheme
+          .findIcon(name: 'input-touchpad', size: 32, extensions: {'png'});
+      assert(file != null);
+      assert(file!.path ==
+          '/usr/share/icons/hicolor/32x32/devices/input-touchpad.png');
+    }
   });
 }

@@ -37,7 +37,10 @@ class IconTheme {
     if (_cachedMappings.containsKey(query)) {
       return _cachedMappings[query];
     }
-    return _iconTheme._findIcon(name, size, scale, extensions);
+    File? icon = _iconTheme._findIcon(name, size, scale, extensions);
+    _cachedMappings[query] = icon;
+
+    return icon;
   }
 }
 

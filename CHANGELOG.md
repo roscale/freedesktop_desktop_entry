@@ -21,3 +21,7 @@
 ## 0.3.1
 
 - Cache icon mappings.
+
+## 0.3.2
+
+- Fix icon cache not working.

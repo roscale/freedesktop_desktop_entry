@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:equatable/equatable.dart';
 import 'package:freedesktop_desktop_entry/freedesktop_desktop_entry.dart';
 import 'package:freedesktop_desktop_entry/src/icon_theme_key.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -14,6 +15,8 @@ class IconTheme {
 
   final _IconTheme _iconTheme;
 
+  final Map<_IconQuery, File?> _cachedMappings = {};
+
   static Future<IconTheme> load(String theme) async {
     return IconTheme._(await _IconTheme.load(theme));
   }
@@ -25,8 +28,34 @@ class IconTheme {
     // A combination of 'png', 'svg', and 'xpm'.
     required Set<String> extensions,
   }) {
+    final query = _IconQuery(
+      name: name,
+      size: size,
+      scale: scale,
+      extensions: extensions,
+    );
+    if (_cachedMappings.containsKey(query)) {
+      return _cachedMappings[query];
+    }
     return _iconTheme._findIcon(name, size, scale, extensions);
   }
+}
+
+class _IconQuery extends Equatable {
+  final String name;
+  final int size;
+  final int scale;
+  final Set<String> extensions;
+
+  _IconQuery({
+    required this.name,
+    required this.size,
+    required this.scale,
+    required this.extensions,
+  });
+
+  @override
+  List<Object?> get props => [name, size, scale, extensions];
 }
 
 @freezed

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:equatable/equatable.dart';
 import 'package:freedesktop_desktop_entry/freedesktop_desktop_entry.dart';
 import 'package:freedesktop_desktop_entry/src/icon_theme_key.dart';
+import 'package:freedesktop_desktop_entry/src/utils.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:path/path.dart' as path;
 
@@ -79,10 +80,10 @@ class _IconTheme with _$_IconTheme {
 
   static Future<_IconTheme> load(String theme) async {
     List<Directory> baseDirectories =
-        await _filterExists(_getBaseDirectories()).toList();
+        await whereExists(getIconBaseDirectories().map(Directory.new)).toList();
     Map<String, FileSystemEntity> baseDirectoryContents =
-        await _getDirectoryContents(Stream.fromIterable(baseDirectories));
-    Map<String, File> themeFiles = await _getThemeFileHierarchy(theme);
+        await getDirectoryContents(Stream.fromIterable(baseDirectories));
+    Map<String, File> themeFiles = await getThemeFileHierarchy(theme);
 
     File? getIndexThemeFile() {
       for (Directory baseDir in baseDirectories) {
@@ -249,70 +250,6 @@ class _IconTheme with _$_IconTheme {
       }
     }
     return null;
-  }
-}
-
-Iterable<Directory> _getBaseDirectories() sync* {
-  String? home = Platform.environment['HOME'];
-  List<String>? xdgDataDirs = Platform.environment['XDG_DATA_DIRS']?.split(':');
-
-  if (home != null) {
-    yield Directory(path.join(home, 'icons'));
-  }
-  if (xdgDataDirs != null) {
-    for (final dataDir in xdgDataDirs) {
-      yield Directory(path.join(dataDir, 'icons'));
-    }
-  }
-  yield Directory('/usr/share/pixmaps');
-}
-
-Future<Map<String, FileSystemEntity>> _getDirectoryContents(
-    Stream<Directory> directories) async {
-  Map<String, FileSystemEntity> contents = {};
-  await for (Directory dir in directories) {
-    await for (FileSystemEntity entity in dir.list()) {
-      contents.putIfAbsent(entity.path, () => entity);
-    }
-  }
-  return contents;
-}
-
-Stream<T> _filterExists<T extends FileSystemEntity>(
-    Iterable<T> entities) async* {
-  for (T entity in entities) {
-    if (await entity.exists()) {
-      yield entity;
-    }
-  }
-}
-
-Future<Map<String, File>> _getThemeFileHierarchy(String theme) async {
-  Map<String, File> cache = {};
-
-  await for (Directory themeDir in _getThemeDirectories(theme)) {
-    List<MapEntry<String, File>> files = await themeDir
-        .list(recursive: true)
-        .where((entity) => entity is File)
-        .map(
-      (entity) {
-        File file = entity as File;
-        return MapEntry(file.path, file);
-      },
-    ).toList();
-
-    cache.addEntries(files);
-  }
-
-  return cache;
-}
-
-Stream<Directory> _getThemeDirectories(String theme) async* {
-  for (Directory baseDirectory in _getBaseDirectories()) {
-    final themeDir = Directory(path.join(baseDirectory.path, theme));
-    if (await themeDir.exists()) {
-      yield themeDir;
-    }
   }
 }
 

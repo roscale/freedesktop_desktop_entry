@@ -81,6 +81,13 @@ class DesktopEntry with _$DesktopEntry {
     return LocalizedDesktopEntry(
         entries: localizedEntries, actions: localizedActions);
   }
+
+  bool isHidden() {
+    return entries[DesktopEntryKey.name.string] == null ||
+        entries[DesktopEntryKey.type.string]?.value != 'Application' ||
+        entries[DesktopEntryKey.noDisplay.string]?.value.getBoolean() == true ||
+        entries[DesktopEntryKey.hidden.string]?.value.getBoolean() == true;
+  }
 }
 
 Map<String, Map<String, Entry>> parseSections(String source) {
@@ -166,10 +173,11 @@ Map<String, Entry> parseEntries(List<String> entryLines) {
       localizedValues: {
         ...entry.localizedValues,
         Locale(
-            lang: lang,
-            country: country,
-            encoding: encoding,
-            modifier: modifier): rawEntry.value,
+          lang: lang,
+          country: country,
+          encoding: encoding,
+          modifier: modifier,
+        ): rawEntry.value,
       },
     );
   }

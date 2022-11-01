@@ -25,3 +25,7 @@
 ## 0.3.2
 
 - Fix icon cache not working.
+
+## 0.3.3
+
+- Added `getAppBaseDirectories` function.

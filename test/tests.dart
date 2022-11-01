@@ -56,4 +56,15 @@ void main() {
           '/usr/share/icons/hicolor/32x32/devices/input-touchpad.png');
     }
   });
+
+  test('absolute path icon', () async {
+    final iconTheme = await IconTheme.load('Adwaita');
+    File? file = iconTheme.findIcon(
+        name: '/usr/share/icons/hicolor/32x32/devices/input-touchpad.png',
+        size: 32,
+        extensions: {'png'});
+    assert(file != null);
+    assert(file!.path ==
+        '/usr/share/icons/hicolor/32x32/devices/input-touchpad.png');
+  });
 }

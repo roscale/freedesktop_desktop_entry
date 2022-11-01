@@ -38,7 +38,16 @@ class IconTheme {
     if (_cachedMappings.containsKey(query)) {
       return _cachedMappings[query];
     }
-    File? icon = _iconTheme._findIcon(name, size, scale, extensions);
+
+    // I don't know if environment variables can be used here, but let's handle them just in case.
+    bool isAbsolutePath = expandEnvironmentVariables(name).startsWith('/');
+
+    File? icon;
+    if (isAbsolutePath) {
+      icon = File(name);
+    } else {
+      icon = _iconTheme._findIcon(name, size, scale, extensions);
+    }
     _cachedMappings[query] = icon;
 
     return icon;

@@ -29,3 +29,7 @@
 ## 0.3.3
 
 - Added `getAppBaseDirectories` function.
+
+## 0.3.4
+
+- Add support for absolute path in `findIcon`.

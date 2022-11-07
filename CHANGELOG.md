@@ -34,6 +34,6 @@
 
 - Add support for absolute path in `findIcon`.
 
-## 0.3.5
+## 0.4.0
 
 - Rename `IconTheme` to `FreedesktopIconTheme` because it interferes with Flutter.

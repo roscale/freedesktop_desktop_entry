@@ -47,7 +47,7 @@ void main() {
   });
 
   test('icon theme', () async {
-    final iconTheme = await IconTheme.load('Adwaita');
+    final iconTheme = await FreedesktopIconTheme.load('Adwaita');
     for (int i = 0; i < 1000; i++) {
       File? file = iconTheme
           .findIcon(name: 'input-touchpad', size: 32, extensions: {'png'});
@@ -58,7 +58,7 @@ void main() {
   });
 
   test('absolute path icon', () async {
-    final iconTheme = await IconTheme.load('Adwaita');
+    final iconTheme = await FreedesktopIconTheme.load('Adwaita');
     File? file = iconTheme.findIcon(
         name: '/usr/share/icons/hicolor/32x32/devices/input-touchpad.png',
         size: 32,

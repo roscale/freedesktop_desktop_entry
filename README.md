@@ -75,7 +75,7 @@ String? frenchComment = desktopEntry.entries[DesktopEntryKey.comment.string]?.lo
 ### Find an icon
 
 ```dart
-IconTheme iconTheme = await IconTheme.load('Adwaita');
+FreedesktopIconTheme iconTheme = await FreedesktopIconTheme.load('Adwaita');
 File? file = iconTheme.findIcon(name: 'firefox', size: 32, scale: 2, extensions: {'png'});
 ```
 

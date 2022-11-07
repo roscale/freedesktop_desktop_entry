@@ -11,15 +11,15 @@ import 'entry.dart';
 
 part 'icon_theme.freezed.dart';
 
-class IconTheme {
-  IconTheme._(this._iconTheme);
+class FreedesktopIconTheme {
+  FreedesktopIconTheme._(this._iconTheme);
 
   final _IconTheme _iconTheme;
 
   final Map<_IconQuery, File?> _cachedMappings = {};
 
-  static Future<IconTheme> load(String theme) async {
-    return IconTheme._(await _IconTheme.load(theme));
+  static Future<FreedesktopIconTheme> load(String theme) async {
+    return FreedesktopIconTheme._(await _IconTheme.load(theme));
   }
 
   File? findIcon({

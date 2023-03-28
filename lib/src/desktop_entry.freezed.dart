@@ -24,6 +24,9 @@ mixin _$DesktopEntry {
   Map<String, Map<String, Entry>> get actions =>
       throw _privateConstructorUsedError;
 
+  /// The desktop file ID.
+  String? get id => throw _privateConstructorUsedError;
+
   @JsonKey(ignore: true)
   $DesktopEntryCopyWith<DesktopEntry> get copyWith =>
       throw _privateConstructorUsedError;
@@ -36,7 +39,9 @@ abstract class $DesktopEntryCopyWith<$Res> {
       _$DesktopEntryCopyWithImpl<$Res, DesktopEntry>;
   @useResult
   $Res call(
-      {Map<String, Entry> entries, Map<String, Map<String, Entry>> actions});
+      {Map<String, Entry> entries,
+      Map<String, Map<String, Entry>> actions,
+      String? id});
 }
 
 /// @nodoc
@@ -54,6 +59,7 @@ class _$DesktopEntryCopyWithImpl<$Res, $Val extends DesktopEntry>
   $Res call({
     Object? entries = null,
     Object? actions = null,
+    Object? id = freezed,
   }) {
     return _then(_value.copyWith(
       entries: null == entries
@@ -64,6 +70,10 @@ class _$DesktopEntryCopyWithImpl<$Res, $Val extends DesktopEntry>
           ? _value.actions
           : actions // ignore: cast_nullable_to_non_nullable
               as Map<String, Map<String, Entry>>,
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -77,7 +87,9 @@ abstract class _$$_DesktopEntryCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {Map<String, Entry> entries, Map<String, Map<String, Entry>> actions});
+      {Map<String, Entry> entries,
+      Map<String, Map<String, Entry>> actions,
+      String? id});
 }
 
 /// @nodoc
@@ -93,6 +105,7 @@ class __$$_DesktopEntryCopyWithImpl<$Res>
   $Res call({
     Object? entries = null,
     Object? actions = null,
+    Object? id = freezed,
   }) {
     return _then(_$_DesktopEntry(
       entries: null == entries
@@ -103,6 +116,10 @@ class __$$_DesktopEntryCopyWithImpl<$Res>
           ? _value._actions
           : actions // ignore: cast_nullable_to_non_nullable
               as Map<String, Map<String, Entry>>,
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -112,7 +129,8 @@ class __$$_DesktopEntryCopyWithImpl<$Res>
 class _$_DesktopEntry extends _DesktopEntry {
   const _$_DesktopEntry(
       {required final Map<String, Entry> entries,
-      final Map<String, Map<String, Entry>> actions = const {}})
+      final Map<String, Map<String, Entry>> actions = const {},
+      this.id = null})
       : _entries = entries,
         _actions = actions,
         super._();
@@ -140,9 +158,14 @@ class _$_DesktopEntry extends _DesktopEntry {
     return EqualUnmodifiableMapView(_actions);
   }
 
+  /// The desktop file ID.
+  @override
+  @JsonKey()
+  final String? id;
+
   @override
   String toString() {
-    return 'DesktopEntry(entries: $entries, actions: $actions)';
+    return 'DesktopEntry(entries: $entries, actions: $actions, id: $id)';
   }
 
   @override
@@ -151,14 +174,16 @@ class _$_DesktopEntry extends _DesktopEntry {
         (other.runtimeType == runtimeType &&
             other is _$_DesktopEntry &&
             const DeepCollectionEquality().equals(other._entries, _entries) &&
-            const DeepCollectionEquality().equals(other._actions, _actions));
+            const DeepCollectionEquality().equals(other._actions, _actions) &&
+            (identical(other.id, id) || other.id == id));
   }
 
   @override
   int get hashCode => Object.hash(
       runtimeType,
       const DeepCollectionEquality().hash(_entries),
-      const DeepCollectionEquality().hash(_actions));
+      const DeepCollectionEquality().hash(_actions),
+      id);
 
   @JsonKey(ignore: true)
   @override
@@ -170,7 +195,8 @@ class _$_DesktopEntry extends _DesktopEntry {
 abstract class _DesktopEntry extends DesktopEntry {
   const factory _DesktopEntry(
       {required final Map<String, Entry> entries,
-      final Map<String, Map<String, Entry>> actions}) = _$_DesktopEntry;
+      final Map<String, Map<String, Entry>> actions,
+      final String? id}) = _$_DesktopEntry;
   const _DesktopEntry._() : super._();
 
   @override
@@ -182,6 +208,10 @@ abstract class _DesktopEntry extends DesktopEntry {
   /// Actions with their entries.
   /// A section named `[Desktop Action xyz]` has key `xyz`.
   Map<String, Map<String, Entry>> get actions;
+  @override
+
+  /// The desktop file ID.
+  String? get id;
   @override
   @JsonKey(ignore: true)
   _$$_DesktopEntryCopyWith<_$_DesktopEntry> get copyWith =>

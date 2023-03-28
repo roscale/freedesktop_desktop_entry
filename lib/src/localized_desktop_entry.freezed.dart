@@ -16,6 +16,7 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$LocalizedDesktopEntry {
+  DesktopEntry get desktopEntry => throw _privateConstructorUsedError;
   Map<String, String> get entries => throw _privateConstructorUsedError;
   Map<String, Map<String, String>> get actions =>
       throw _privateConstructorUsedError;
@@ -32,7 +33,11 @@ abstract class $LocalizedDesktopEntryCopyWith<$Res> {
       _$LocalizedDesktopEntryCopyWithImpl<$Res, LocalizedDesktopEntry>;
   @useResult
   $Res call(
-      {Map<String, String> entries, Map<String, Map<String, String>> actions});
+      {DesktopEntry desktopEntry,
+      Map<String, String> entries,
+      Map<String, Map<String, String>> actions});
+
+  $DesktopEntryCopyWith<$Res> get desktopEntry;
 }
 
 /// @nodoc
@@ -49,10 +54,15 @@ class _$LocalizedDesktopEntryCopyWithImpl<$Res,
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? desktopEntry = null,
     Object? entries = null,
     Object? actions = null,
   }) {
     return _then(_value.copyWith(
+      desktopEntry: null == desktopEntry
+          ? _value.desktopEntry
+          : desktopEntry // ignore: cast_nullable_to_non_nullable
+              as DesktopEntry,
       entries: null == entries
           ? _value.entries
           : entries // ignore: cast_nullable_to_non_nullable
@@ -62,6 +72,14 @@ class _$LocalizedDesktopEntryCopyWithImpl<$Res,
           : actions // ignore: cast_nullable_to_non_nullable
               as Map<String, Map<String, String>>,
     ) as $Val);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $DesktopEntryCopyWith<$Res> get desktopEntry {
+    return $DesktopEntryCopyWith<$Res>(_value.desktopEntry, (value) {
+      return _then(_value.copyWith(desktopEntry: value) as $Val);
+    });
   }
 }
 
@@ -74,7 +92,12 @@ abstract class _$$_LocalizedDesktopEntryCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {Map<String, String> entries, Map<String, Map<String, String>> actions});
+      {DesktopEntry desktopEntry,
+      Map<String, String> entries,
+      Map<String, Map<String, String>> actions});
+
+  @override
+  $DesktopEntryCopyWith<$Res> get desktopEntry;
 }
 
 /// @nodoc
@@ -88,10 +111,15 @@ class __$$_LocalizedDesktopEntryCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? desktopEntry = null,
     Object? entries = null,
     Object? actions = null,
   }) {
     return _then(_$_LocalizedDesktopEntry(
+      desktopEntry: null == desktopEntry
+          ? _value.desktopEntry
+          : desktopEntry // ignore: cast_nullable_to_non_nullable
+              as DesktopEntry,
       entries: null == entries
           ? _value._entries
           : entries // ignore: cast_nullable_to_non_nullable
@@ -108,12 +136,15 @@ class __$$_LocalizedDesktopEntryCopyWithImpl<$Res>
 
 class _$_LocalizedDesktopEntry extends _LocalizedDesktopEntry {
   const _$_LocalizedDesktopEntry(
-      {required final Map<String, String> entries,
+      {required this.desktopEntry,
+      required final Map<String, String> entries,
       final Map<String, Map<String, String>> actions = const {}})
       : _entries = entries,
         _actions = actions,
         super._();
 
+  @override
+  final DesktopEntry desktopEntry;
   final Map<String, String> _entries;
   @override
   Map<String, String> get entries {
@@ -131,7 +162,7 @@ class _$_LocalizedDesktopEntry extends _LocalizedDesktopEntry {
 
   @override
   String toString() {
-    return 'LocalizedDesktopEntry(entries: $entries, actions: $actions)';
+    return 'LocalizedDesktopEntry(desktopEntry: $desktopEntry, entries: $entries, actions: $actions)';
   }
 
   @override
@@ -139,6 +170,8 @@ class _$_LocalizedDesktopEntry extends _LocalizedDesktopEntry {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$_LocalizedDesktopEntry &&
+            (identical(other.desktopEntry, desktopEntry) ||
+                other.desktopEntry == desktopEntry) &&
             const DeepCollectionEquality().equals(other._entries, _entries) &&
             const DeepCollectionEquality().equals(other._actions, _actions));
   }
@@ -146,6 +179,7 @@ class _$_LocalizedDesktopEntry extends _LocalizedDesktopEntry {
   @override
   int get hashCode => Object.hash(
       runtimeType,
+      desktopEntry,
       const DeepCollectionEquality().hash(_entries),
       const DeepCollectionEquality().hash(_actions));
 
@@ -159,11 +193,14 @@ class _$_LocalizedDesktopEntry extends _LocalizedDesktopEntry {
 
 abstract class _LocalizedDesktopEntry extends LocalizedDesktopEntry {
   const factory _LocalizedDesktopEntry(
-          {required final Map<String, String> entries,
+          {required final DesktopEntry desktopEntry,
+          required final Map<String, String> entries,
           final Map<String, Map<String, String>> actions}) =
       _$_LocalizedDesktopEntry;
   const _LocalizedDesktopEntry._() : super._();
 
+  @override
+  DesktopEntry get desktopEntry;
   @override
   Map<String, String> get entries;
   @override

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:freedesktop_desktop_entry/freedesktop_desktop_entry.dart';
-import 'package:freedesktop_desktop_entry/src/icon_theme.dart';
 import 'package:test/test.dart';
 
 void main() {

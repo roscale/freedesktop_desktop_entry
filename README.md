@@ -34,8 +34,7 @@ import 'package:freedesktop_desktop_entry/freedesktop_desktop_entry.dart';
 import 'dart:io';
 
 final file = File("desktop-entry.desktop");
-String content = await file.readAsString();
-DesktopEntry desktopEntry = DesktopEntry.parse(content);
+DesktopEntry desktopEntry = await DesktopEntry.parseFile(file);
 ```
 
 ### Localize an entire desktop entry

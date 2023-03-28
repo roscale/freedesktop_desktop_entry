@@ -19,17 +19,9 @@ Stream<T> whereExists<T extends FileSystemEntity>(Iterable<T> entities) async* {
 }
 
 Iterable<String> getDataDirectories() sync* {
-  yield Platform.environment['XDG_DATA_HOME'] ??
-      expandEnvironmentVariables(r'$HOME/.local/share');
-  yield* (Platform.environment['XDG_DATA_DIRS'] ??
-          '/usr/local/share:/usr/share')
-      .split(':');
+  yield Platform.environment['XDG_DATA_HOME'] ?? expandEnvironmentVariables(r'$HOME/.local/share');
+  yield* (Platform.environment['XDG_DATA_DIRS'] ?? '/usr/local/share:/usr/share').split(':');
 }
-
-/// Returns all potential directories where desktop entries might reside.
-/// Some directories might not exist.
-Iterable<String> getAppBaseDirectories() =>
-    getDataDirectories().map((dir) => path.join(dir, 'applications'));
 
 Iterable<String> getIconBaseDirectories() sync* {
   String? home = Platform.environment['HOME'];
@@ -41,8 +33,7 @@ Iterable<String> getIconBaseDirectories() sync* {
   yield '/usr/share/pixmaps';
 }
 
-Future<Map<String, FileSystemEntity>> getDirectoryContents(
-    Stream<Directory> directories) async {
+Future<Map<String, FileSystemEntity>> getDirectoryContents(Stream<Directory> directories) async {
   Map<String, FileSystemEntity> contents = {};
   await for (Directory dir in directories) {
     await for (FileSystemEntity entity in dir.list()) {
@@ -53,22 +44,19 @@ Future<Map<String, FileSystemEntity>> getDirectoryContents(
 }
 
 Future<Map<String, File>> getThemeFileHierarchy(String theme) async {
-  Map<String, File> cache = {};
+  Map<String, File> themeFiles = {};
 
   await for (Directory themeDir in getThemeDirectories(theme)) {
-    List<MapEntry<String, File>> files = await themeDir
-        .list(recursive: true)
-        .where((entity) => entity is File)
-        .map(
+    List<MapEntry<String, File>> files = await themeDir.list(recursive: true).where((entity) => entity is File).map(
       (entity) {
         File file = entity as File;
         return MapEntry(file.path, file);
       },
     ).toList();
 
-    cache.addEntries(files);
+    themeFiles.addEntries(files);
   }
-  return cache;
+  return themeFiles;
 }
 
 Stream<Directory> getThemeDirectories(String theme) async* {

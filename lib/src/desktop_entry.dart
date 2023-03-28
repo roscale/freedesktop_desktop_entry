@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'desktop_entry_key.dart';
@@ -19,32 +21,29 @@ class DesktopEntry with _$DesktopEntry {
     /// Actions with their entries.
     /// A section named `[Desktop Action xyz]` has key `xyz`.
     @Default({}) Map<String, Map<String, Entry>> actions,
+
+    /// The desktop file ID.
+    @Default(null) String? id,
   }) = _DesktopEntry;
 
   factory DesktopEntry.parse(String source) {
     Map<String, Map<String, Entry>> sections = parseSections(source);
 
     Map<String, Entry> entries = sections["Desktop Entry"] ?? {};
-    Map<String, Map<String, Entry>> actions = {};
+    List<String>? declaredActions = entries[DesktopEntryKey.actions.string]?.value.getStringList();
+    Map<String, Map<String, Entry>> actions = getActions(sections, declaredActions);
 
-    for (final entry in sections.entries) {
-      final actionRegex = RegExp(r'^Desktop Action (?<action>[ -~]+)$');
-      final match = actionRegex.firstMatch(entry.key);
-      if (match != null) {
-        final actionName = match.namedGroup('action')!;
-        actions.putIfAbsent(actionName, () => entry.value);
-        continue;
-      }
-    }
+    return DesktopEntry(
+      entries: entries,
+      actions: actions,
+    );
+  }
 
-    // It is not valid to have an action group for an action identifier not mentioned in the Actions key.
-    // These actions must be ignored.
-    final List<String>? declaredActions =
-        entries[DesktopEntryKey.actions.string]?.value.getStringList();
-    actions.removeWhere(
-        (actionName, _) => !(declaredActions?.contains(actionName) ?? false));
-
-    return DesktopEntry(entries: entries, actions: actions);
+  static Future<DesktopEntry> parseFile(File file) async {
+    String source = await file.readAsString();
+    return DesktopEntry.parse(source).copyWith(
+      id: getDesktopFileId(file.path),
+    );
   }
 
   LocalizedDesktopEntry localize({
@@ -79,7 +78,10 @@ class DesktopEntry with _$DesktopEntry {
       ),
     );
     return LocalizedDesktopEntry(
-        entries: localizedEntries, actions: localizedActions);
+      desktopEntry: this,
+      entries: localizedEntries,
+      actions: localizedActions,
+    );
   }
 
   bool isHidden() {
@@ -115,8 +117,7 @@ Map<String, Map<String, Entry>> parseSections(String source) {
     list?.add(line);
   }
 
-  Map<String, Map<String, Entry>> sections =
-      sectionLines.map((key, value) => MapEntry(key, parseEntries(value)));
+  Map<String, Map<String, Entry>> sections = sectionLines.map((key, value) => MapEntry(key, parseEntries(value)));
 
   return sections;
 }
@@ -132,8 +133,7 @@ Map<String, Entry> parseEntries(List<String> entryLines) {
   });
 
   for (MapEntry<String, String> rawEntry in mapEntries) {
-    final keyRegex =
-        RegExp(r'^(?<name>[A-Za-z0-9-]+)(:?\[(?<locale>[A-Za-z0-9-_.@]+)\])?$');
+    final keyRegex = RegExp(r'^(?<name>[A-Za-z0-9-]+)(:?\[(?<locale>[A-Za-z0-9-_.@]+)\])?$');
     var match = keyRegex.firstMatch(rawEntry.key);
 
     String? name = match?.namedGroup('name');
@@ -143,8 +143,7 @@ Map<String, Entry> parseEntries(List<String> entryLines) {
       continue;
     }
 
-    Entry getEntry(String name) =>
-        entries.putIfAbsent(name, () => Entry(value: ''));
+    Entry getEntry(String name) => entries.putIfAbsent(name, () => Entry(value: ''));
 
     if (locale == null) {
       // Default value.
@@ -183,4 +182,31 @@ Map<String, Entry> parseEntries(List<String> entryLines) {
   }
 
   return entries;
+}
+
+Map<String, Map<String, Entry>> getActions(Map<String, Map<String, Entry>> sections, List<String>? declaredActions) {
+  if (declaredActions == null) {
+    return {};
+  }
+
+  Map<String, Map<String, Entry>> actions = {};
+
+  for (final entry in sections.entries) {
+    final actionRegex = RegExp(r'^Desktop Action (?<action>[ -~]+)$');
+    final match = actionRegex.firstMatch(entry.key);
+    if (match != null) {
+      final actionName = match.namedGroup('action')!;
+      // It is not valid to have an action group for an action identifier not mentioned in the Actions key.
+      // These actions must be ignored.
+      if (declaredActions.contains(actionName)) {
+        actions.putIfAbsent(actionName, () => entry.value);
+      }
+    }
+  }
+
+  return actions;
+}
+
+String getDesktopFileId(String path) {
+  return path.replaceFirst(RegExp(r'^.*applications/'), '').replaceFirst(RegExp(r'.desktop$'), '').replaceAll('/', '-');
 }

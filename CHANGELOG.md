@@ -37,3 +37,9 @@
 ## 0.4.0
 
 - Rename `IconTheme` to `FreedesktopIconTheme` because it interferes with Flutter.
+
+## 0.5.0
+
+- `LocalizedDesktopEntry` must point to its original `DesktopEntry`.
+- Rename `getAppBaseDirectories` to `getApplicationDirectories`.
+- Add `parseAllInstalledDesktopFiles` function.

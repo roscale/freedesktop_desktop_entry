@@ -18,9 +18,7 @@ extension EntryValueType on String {
       values.removeLast();
     }
     // Unescape delimiters in list items.
-    return values
-        .map((e) => e.replaceAll(r'\' + delimiter, delimiter))
-        .toList();
+    return values.map((e) => e.replaceAll(r'\' + delimiter, delimiter)).toList();
   }
 
   int? getInteger() => int.tryParse(this);

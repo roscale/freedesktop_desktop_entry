@@ -43,3 +43,8 @@
 - `LocalizedDesktopEntry` must point to its original `DesktopEntry`.
 - Rename `getAppBaseDirectories` to `getApplicationDirectories`.
 - Add `parseAllInstalledDesktopFiles` function.
+
+## 0.6.0
+
+- Faster indexing that offloads the work to an isolate.
+- All installed themes are indexed.

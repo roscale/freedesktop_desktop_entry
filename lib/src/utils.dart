@@ -2,14 +2,24 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 
+/// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+Iterable<String> getDataDirectories() sync* {
+  yield Platform.environment['XDG_DATA_HOME'] ?? expandEnvironmentVariables(r'$HOME/.local/share');
+  yield* (Platform.environment['XDG_DATA_DIRS'] ?? '/usr/local/share:/usr/share').split(':');
+}
+
+// Only if the dollar sign does not have a backslash before it.
+final unescapedVariables = RegExp(r'(?<!\\)\$([a-zA-Z_]+[a-zA-Z0-9_]*)');
+
+/// Resolves environment variables. Replaces all $VARS with their value.
 String expandEnvironmentVariables(String path) {
-  final unescapedVariables = RegExp(r'(?<!\\)\$([a-zA-Z_]+[a-zA-Z0-9_]*)');
   return path.replaceAllMapped(unescapedVariables, (Match match) {
     String env = match[1]!;
     return Platform.environment[env] ?? '';
   });
 }
 
+/// Filters out filesystem entities that don't exist.
 Stream<T> whereExists<T extends FileSystemEntity>(Iterable<T> entities) async* {
   for (T entity in entities) {
     if (await entity.exists()) {
@@ -18,11 +28,8 @@ Stream<T> whereExists<T extends FileSystemEntity>(Iterable<T> entities) async* {
   }
 }
 
-Iterable<String> getDataDirectories() sync* {
-  yield Platform.environment['XDG_DATA_HOME'] ?? expandEnvironmentVariables(r'$HOME/.local/share');
-  yield* (Platform.environment['XDG_DATA_DIRS'] ?? '/usr/local/share:/usr/share').split(':');
-}
-
+/// Returns all the places where icons *could* reside. These directories might
+/// not actually exist.
 Iterable<String> getIconBaseDirectories() sync* {
   String? home = Platform.environment['HOME'];
 

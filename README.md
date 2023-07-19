@@ -15,12 +15,9 @@ A Dart package for parsing freedesktop (XDG) desktop entries on Linux.
 
 ## Features
 
-- obtain values by key
-- obtain localized values
-- obtain values from action groups
-- localize values according to the locale matching rules of the specification
-- localize entire desktop entries
-- icon lookup
+- Obtain values by key, including action groups.
+- Obtain localized values.
+- Icon lookup.
 
 This package provides the `DesktopEntryKey` enum for convenience, but it doesn't make any assumptions
 about value types and whether a key is required or not. All keys are considered optional.
@@ -74,8 +71,22 @@ String? frenchComment = desktopEntry.entries[DesktopEntryKey.comment.string]?.lo
 ### Find an icon
 
 ```dart
-FreedesktopIconTheme iconTheme = await FreedesktopIconTheme.load('Adwaita');
-File? file = iconTheme.findIcon(name: 'firefox', size: 32, scale: 2, extensions: {'png'});
+final themes = FreedesktopIconThemes();
+File? file = await themes.findIcon(
+    IconQuery(
+        name: 'firefox',
+        size: 32,
+        scale: 2,
+        extensions: ['png'],
+    ),
+);
 ```
 
-If a new icon is added to the filesystem, you have to reload the icon theme to find it.
+The first time you do an icon lookup, all installed themes on your system will be indexed.
+If you want to preload the themes, call `FreedesktopIconThemes.loadThemes`.
+
+If new icons are installed, the next time you call `FreedesktopIconThemes.findIcon` it will index all themes once again
+before returning you an icon.
+
+You can specify `preferredThemes` in `IconQuery`. This prioritizes the search to the list of theme names you've given before searching elsewhere.
+These theme names must be directory names, not user-visible names. For example `breeze-dark` and not `Breeze Dark`.

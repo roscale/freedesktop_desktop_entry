@@ -1,5 +1,7 @@
+import 'dart:collection';
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'desktop_entry_key.dart';
@@ -92,96 +94,98 @@ class DesktopEntry with _$DesktopEntry {
   }
 }
 
+final _sectionRegex = RegExp(r'^\[(?<section>.*)\]$');
+final _actionRegex = RegExp(r'^Desktop Action (?<action>[ -~]+)$');
+final _entryKeyRegex = RegExp(r'^(?<name>[A-Za-z0-9-]+)(:?\[(?<locale>[A-Za-z0-9-_.@]+)\])?$');
+final _localeRegex = RegExp(
+  r'^(?<lang>[A-Za-z0-9-]+)'
+  r'(?:_(?<country>[A-Za-z0-9-]+))?'
+  r'(?:\.(?<encoding>[A-Za-z0-9-]+))?'
+  r'(?:@(?<modifier>[A-Za-z0-9-]+))?$',
+);
+final _applicationsRegex = RegExp(r'^.*applications/');
+final _desktopRegex = RegExp(r'.desktop$');
+
 Map<String, Map<String, Entry>> parseSections(String source) {
-  var lines = source.split('\n');
+  String section = "";
 
-  lines = lines.map((String line) {
-    return line.trim();
-  }).where((String line) {
-    // Remove empty lines and comments.
-    return line.isNotEmpty && !line.startsWith('#') && !line.startsWith(';');
-  }).toList();
-
-  final Map<String, List<String>> sectionLines = {};
-
-  List<String>? list;
-  for (final line in lines) {
-    final sectionRegex = RegExp(r'^\[(?<section>.*)\]$');
-    final match = sectionRegex.firstMatch(line);
-    if (match != null) {
-      final sectionName = match.namedGroup('section')!;
-      list = sectionLines.putIfAbsent(sectionName, () => []);
-      continue;
-    }
-
-    list?.add(line);
+  String bySection(String entryLine) {
+    section = _sectionRegex.firstMatch(entryLine)?.namedGroup("section") ?? section;
+    return section;
   }
 
-  Map<String, Map<String, Entry>> sections = sectionLines.map((key, value) => MapEntry(key, parseEntries(value)));
-
-  return sections;
+  return source
+      .split('\n')
+      .map((String line) => line.trim())
+      // Remove empty lines and comments.
+      .where((String line) => line.isNotEmpty && !line.startsWith('#') && !line.startsWith(';'))
+      .groupListsBy(bySection)
+      // Skip the first element in `lines` because it's the section header.
+      .map((section, lines) => MapEntry(section, parseEntries(lines.skip(1))));
 }
 
-Map<String, Entry> parseEntries(List<String> entryLines) {
-  Map<String, Entry> entries = {};
+typedef EntryLine = ({
+  String? name,
+  (
+    String? lang,
+    String? country,
+    String? encoding,
+    String? modifier,
+  ) locale,
+  String value,
+});
 
-  final mapEntries = entryLines.map((line) {
-    final tokens = line.split('=');
-    final key = tokens[0].trim();
-    final value = tokens.skip(1).join('=').trim();
-    return MapEntry(key, value);
-  });
+Map<String, Entry> parseEntries(Iterable<String> entryLines) {
+  EntryLine readLine(String line) {
+    var delimiter = line.indexOf("=");
+    String key = line.substring(0, delimiter).trim();
+    String value = line.substring(delimiter + 1).trim();
 
-  for (MapEntry<String, String> rawEntry in mapEntries) {
-    final keyRegex = RegExp(r'^(?<name>[A-Za-z0-9-]+)(:?\[(?<locale>[A-Za-z0-9-_.@]+)\])?$');
-    var match = keyRegex.firstMatch(rawEntry.key);
-
+    var match = _entryKeyRegex.firstMatch(key);
     String? name = match?.namedGroup('name');
     String? locale = match?.namedGroup('locale');
 
-    if (name == null) {
-      continue;
-    }
-
-    Entry getEntry(String name) => entries.putIfAbsent(name, () => Entry(value: ''));
-
-    if (locale == null) {
-      // Default value.
-      entries[name] = getEntry(name).copyWith(value: rawEntry.value);
-      continue;
-    }
-
-    match = RegExp(
-      r'^(?<lang>[A-Za-z0-9-]+)'
-      r'(?:_(?<country>[A-Za-z0-9-]+))?'
-      r'(?:\.(?<encoding>[A-Za-z0-9-]+))?'
-      r'(?:@(?<modifier>[A-Za-z0-9-]+))?$',
-    ).firstMatch(locale);
-
+    match = locale != null ? _localeRegex.firstMatch(locale) : null;
     String? lang = match?.namedGroup('lang');
     String? country = match?.namedGroup('country');
     String? encoding = match?.namedGroup('encoding');
     String? modifier = match?.namedGroup('modifier');
 
-    if (lang == null) {
-      continue;
+    return (name: name, locale: (lang, country, encoding, modifier), value: value);
+  }
+
+  bool isEntryValid(EntryLine entryLine) {
+    final (lang, country, encoding, modifier) = entryLine.locale;
+    // If locale exists, lang must be non-null.
+    bool hasLocale = [lang, country, encoding, modifier].nonNulls.isNotEmpty;
+    return entryLine.name != null && (!hasLocale || lang != null);
+  }
+
+  Entry combine(Entry? entry, tuple) {
+    entry ??= Entry(value: '');
+
+    final (lang, country, encoding, modifier) = tuple.locale;
+    bool hasLocale = [lang, country, encoding, modifier].nonNulls.isNotEmpty;
+
+    if (!hasLocale) {
+      // Default value.
+      return entry.copyWith(value: tuple.value);
     }
 
-    final entry = getEntry(name);
-    entries[name] = entry.copyWith(
+    return entry.copyWith(
       localizedValues: {
         ...entry.localizedValues,
         Locale(
-          lang: lang,
+          lang: lang!,
           country: country,
           encoding: encoding,
           modifier: modifier,
-        ): rawEntry.value,
+        ): tuple.value,
       },
     );
   }
 
-  return entries;
+  return entryLines.map(readLine).where(isEntryValid).groupFoldBy((entryLine) => entryLine.name!, combine);
 }
 
 Map<String, Map<String, Entry>> getActions(Map<String, Map<String, Entry>> sections, List<String>? declaredActions) {
@@ -189,24 +193,20 @@ Map<String, Map<String, Entry>> getActions(Map<String, Map<String, Entry>> secti
     return {};
   }
 
-  Map<String, Map<String, Entry>> actions = {};
-
-  for (final entry in sections.entries) {
-    final actionRegex = RegExp(r'^Desktop Action (?<action>[ -~]+)$');
-    final match = actionRegex.firstMatch(entry.key);
-    if (match != null) {
-      final actionName = match.namedGroup('action')!;
+  final entries = sections.entries
+      .map((entry) {
+        RegExpMatch? match = _actionRegex.firstMatch(entry.key);
+        String? actionName = match?.namedGroup('action');
+        return (actionName, entry.value);
+      })
       // It is not valid to have an action group for an action identifier not mentioned in the Actions key.
       // These actions must be ignored.
-      if (declaredActions.contains(actionName)) {
-        actions.putIfAbsent(actionName, () => entry.value);
-      }
-    }
-  }
+      .where((tuple) => tuple.$1 != null && declaredActions.contains(tuple.$1))
+      .map((tuple) => MapEntry(tuple.$1!, tuple.$2));
 
-  return actions;
+  return Map.fromEntries(entries);
 }
 
 String getDesktopFileId(String path) {
-  return path.replaceFirst(RegExp(r'^.*applications/'), '').replaceFirst(RegExp(r'.desktop$'), '').replaceAll('/', '-');
+  return path.replaceFirst(_applicationsRegex, '').replaceFirst(_desktopRegex, '').replaceAll('/', '-');
 }

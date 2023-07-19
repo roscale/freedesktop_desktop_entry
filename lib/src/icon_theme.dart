@@ -1,239 +1,177 @@
 import 'dart:io';
+import 'dart:isolate';
 
+import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:freedesktop_desktop_entry/freedesktop_desktop_entry.dart';
 import 'package:freedesktop_desktop_entry/src/icon_theme_key.dart';
 import 'package:freedesktop_desktop_entry/src/utils.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:path/path.dart' as path;
 
 import 'entry.dart';
 
-part 'icon_theme.freezed.dart';
+class FreedesktopIconThemes {
+  List<Directory> _baseDirectories = [];
+  Map<String, DateTime> _baseDirectoriesLastChangedTimes = {};
+  Map<String, _IconTheme> _iconThemes = {};
+  Map<String, File> _fallbackIcons = {};
+  Map<IconQuery, File?> _cachedMappings = {};
+  DateTime _lastIconLookup = DateTime(0);
 
-class FreedesktopIconTheme {
-  FreedesktopIconTheme._(this._iconTheme);
+  FreedesktopIconThemes();
 
-  final _IconTheme _iconTheme;
+  FreedesktopIconThemes._new(
+    this._baseDirectories,
+    this._baseDirectoriesLastChangedTimes,
+    this._iconThemes,
+    this._fallbackIcons,
+    this._cachedMappings,
+  );
 
-  final Map<_IconQuery, File?> _cachedMappings = {};
-
-  static Future<FreedesktopIconTheme> load(String theme) async {
-    return FreedesktopIconTheme._(await _IconTheme.load(theme));
+  Future<void> loadThemes() async {
+    FreedesktopIconThemes themes = await Isolate.run(_index);
+    _baseDirectories = themes._baseDirectories;
+    _baseDirectoriesLastChangedTimes = themes._baseDirectoriesLastChangedTimes;
+    _iconThemes = themes._iconThemes;
+    _fallbackIcons = themes._fallbackIcons;
+    _cachedMappings = themes._cachedMappings;
   }
 
-  File? findIcon({
-    required String name,
-    required int size,
-    int scale = 1,
-    // A combination of 'png', 'svg', and 'xpm'.
-    required Set<String> extensions,
-  }) {
-    final query = _IconQuery(
-      name: name,
-      size: size,
-      scale: scale,
-      extensions: extensions,
-    );
+  Future<File?> findIcon(IconQuery query) async {
+    if (DateTime.now().difference(_lastIconLookup).inSeconds > 5) {
+      var baseDirectories = await whereExists(getIconBaseDirectories().map(Directory.new)).toList();
+      var modifiedTimes = await _getBaseDirectoriesChangedTimes(baseDirectories);
+
+      if (!MapEquality().equals(modifiedTimes, _baseDirectoriesLastChangedTimes)) {
+        await loadThemes();
+      }
+    }
+
+    _lastIconLookup = DateTime.now();
+
     if (_cachedMappings.containsKey(query)) {
       return _cachedMappings[query];
     }
 
-    // I don't know if environment variables can be used here, but let's handle them just in case.
-    bool isAbsolutePath = expandEnvironmentVariables(name).startsWith('/');
+    // I don't know if environment variables can be used in absolute icon paths, but let's handle them just in case.
+    bool isAbsolutePath = expandEnvironmentVariables(query.name).startsWith('/');
 
     File? icon;
     if (isAbsolutePath) {
-      icon = File(name);
+      icon = File(query.name);
     } else {
-      icon = _iconTheme._findIcon(name, size, scale, extensions);
+      icon = _findIcon(query);
     }
     _cachedMappings[query] = icon;
 
     return icon;
   }
-}
 
-class _IconQuery extends Equatable {
-  final String name;
-  final int size;
-  final int scale;
-  final Set<String> extensions;
-
-  _IconQuery({
-    required this.name,
-    required this.size,
-    required this.scale,
-    required this.extensions,
-  });
-
-  @override
-  List<Object?> get props => [name, size, scale, extensions];
-}
-
-@freezed
-class _IconTheme with _$_IconTheme {
-  const _IconTheme._();
-
-  const factory _IconTheme({
-    required String name,
-
-    /// Entries from `[Icon Theme]`.
-    required Map<String, Entry> entries,
-    @Default([]) List<_IconTheme> parents,
-
-    /// Directory sections with their entries.
-    @Default({}) Map<String, _IconDirectory> directories,
-    required _IconThemeCache cache,
-  }) = ___IconTheme;
-
-  static Future<_IconTheme> load(String theme) async {
-    List<Directory> baseDirectories =
-        await whereExists(getIconBaseDirectories().map(Directory.new)).toList();
-    Map<String, FileSystemEntity> baseDirectoryContents =
-        await getDirectoryContents(Stream.fromIterable(baseDirectories));
-    Map<String, File> themeFiles = await getThemeFileHierarchy(theme);
-
-    File? getIndexThemeFile() {
-      for (Directory baseDir in baseDirectories) {
-        File? indexFile =
-            themeFiles[path.join(baseDir.path, theme, 'index.theme')];
-        if (indexFile != null) {
-          return indexFile;
-        }
-      }
-      return null;
-    }
-
-    File? indexFile = getIndexThemeFile();
-    if (indexFile == null) {
-      throw FileSystemException(
-          'No `index.theme` could be found for this theme');
-    }
-
-    String content = await indexFile.readAsString();
-    Map<String, Map<String, Entry>> sections = parseSections(content);
-
-    final entries = sections['Icon Theme'] ?? {};
-
-    Map<String, _IconDirectory> iconDirectories = {};
-    List<String>? directories =
-        entries[IconThemeKey.directories.string]?.value.getStringList(',');
-
-    if (directories != null) {
-      for (String dir in directories) {
-        Map<String, Entry>? entries = sections[dir];
-        if (entries == null) {
-          continue;
-        }
-        try {
-          String? type = entries[IconThemeKey.type.string]?.value;
-
-          iconDirectories.putIfAbsent(
-            dir,
-            () => _IconDirectory(
-              size: entries[IconThemeKey.size.string]!.value.getInteger()!,
-              type: _IconType.values.firstWhereOrNull((e) => e.string == type),
-              scale: entries[IconThemeKey.scale.string]?.value.getInteger(),
-              minSize: entries[IconThemeKey.minSize.string]?.value.getInteger(),
-              maxSize: entries[IconThemeKey.maxSize.string]?.value.getInteger(),
-              threshold:
-                  entries[IconThemeKey.threshold.string]?.value.getInteger(),
-            ),
-          );
-        } catch (_) {
-          continue;
-        }
-      }
-    }
-
-    List<String> parents =
-        entries[IconThemeKey.inherits.string]?.value.getStringList(',') ?? [];
-    if (theme != 'hicolor' && !parents.contains('hicolor')) {
-      // hicolor must always be in the inheritance tree.
-      parents.add('hicolor');
-    }
-
-    return _IconTheme(
-      name: theme,
-      entries: entries,
-      directories: iconDirectories,
-      parents: await Future.wait(parents.map((e) => _IconTheme.load(e))),
-      cache: _IconThemeCache(
-        baseDirectories: baseDirectories,
-        baseDirectoryContents: baseDirectoryContents,
-        themeFiles: themeFiles,
-      ),
-    );
-  }
-
-  File? _findIcon(String icon, int size, int scale, Set<String> extensions) {
-    File? file = _findIconHelper(icon, size, scale, extensions);
+  File? _findIcon(IconQuery query) {
+    File? file = _findIconFromThemes(query);
     if (file != null) {
       return file;
     }
-    return _lookupFallbackIcon(icon, extensions);
+    return _lookupFallbackIcon(query.name, query.extensions);
   }
 
-  File? _findIconHelper(
-      String icon, int size, int scale, Set<String> extensions) {
-    File? file = _lookupIcon(icon, size, scale, extensions);
-    if (file != null) {
-      return file;
+  File? _findIconFromThemes(IconQuery query) {
+    Set<_IconTheme> leafThemes = {};
+    leafThemes.addAll(_iconThemes.values);
+    for (_IconTheme theme in _iconThemes.values) {
+      leafThemes.removeWhere((_IconTheme t) => theme.parents.contains(t));
     }
 
-    for (_IconTheme parent in parents) {
-      File? file = parent._findIconHelper(icon, size, scale, extensions);
+    var themes = query.preferredThemes.map((String theme) => _iconThemes[theme]).whereNotNull().toSet();
+    themes.addAll(leafThemes);
+
+    Set<String> visitedThemes = {};
+    for (_IconTheme theme in themes) {
+      File? file = _findIconHelper(theme, query.name, query.size, query.scale, query.extensions, visitedThemes);
       if (file != null) {
         return file;
       }
     }
-
     return null;
   }
 
-  File? _lookupIcon(
-      String iconName, int size, int scale, Set<String> extensions) {
-    for (final subDir in directories.entries) {
-      for (Directory baseDir in cache.baseDirectories) {
-        for (String extension in extensions) {
-          if (_directoryMatchesSize(subDir.value, size, scale)) {
-            String filename = path.join(
-                baseDir.path, name, subDir.key, '$iconName.$extension');
-            File? file = cache.themeFiles[filename];
-            if (file != null) {
-              return file;
-            }
-          }
+  File? _findIconHelper(
+    _IconTheme theme,
+    String icon,
+    int size,
+    int scale,
+    List<String> extensions,
+    Set<String> visitedThemes,
+  ) {
+    for (_IconTheme theme in _visitIconThemeHierarchy(theme)) {
+      File? file = _lookupIcon(theme, icon, size, scale, extensions);
+      if (file != null) {
+        return file;
+      }
+    }
+    return null;
+  }
+
+  Iterable<_IconTheme> _visitIconThemeHierarchy(_IconTheme theme) sync* {
+    Set<_IconTheme> visitedThemes = {};
+
+    Iterable<_IconTheme> visit(_IconTheme theme) sync* {
+      yield theme;
+      visitedThemes.add(theme);
+
+      for (_IconTheme parent in theme.parents) {
+        if (!visitedThemes.contains(parent)) {
+          yield* visit(parent);
         }
       }
     }
 
-    int? minimalSize;
+    yield* visit(theme);
+  }
+
+  File? _lookupIcon(
+    _IconTheme theme,
+    String iconName,
+    int size,
+    int scale,
+    List<String> extensions,
+  ) {
+    for (String extension in extensions) {
+      String filename = "$iconName.$extension";
+      List<(String, _IconDirectoryDescription)>? iconDirs = theme.icons[filename];
+      if (iconDirs == null) {
+        continue;
+      }
+      for (var (String iconDirPath, _IconDirectoryDescription iconDir) in iconDirs) {
+        if (!_directoryMatchesSize(iconDir, size, scale)) {
+          continue;
+        }
+        return File(path.join(iconDirPath, '$iconName.$extension'));
+      }
+    }
+
+    int? minimalSizeDistance;
     File? closestFile;
 
-    for (final subDir in directories.entries) {
-      for (Directory baseDir in cache.baseDirectories) {
-        for (String extension in extensions) {
-          String filename =
-              path.join(baseDir.path, name, subDir.key, '$iconName.$extension');
-          File? file = cache.themeFiles[filename];
-          if (file != null) {
-            final sizeDistance =
-                _directorySizeDistance(subDir.value, size, scale);
-            if ((minimalSize == null || sizeDistance < minimalSize)) {
-              closestFile = file;
-              minimalSize = sizeDistance;
-            }
-          }
+    for (String extension in extensions) {
+      String filename = "$iconName.$extension";
+      List<(String, _IconDirectoryDescription)>? iconDirs = theme.icons[filename];
+      if (iconDirs == null) {
+        continue;
+      }
+      for (var (String iconDirPath, _IconDirectoryDescription iconDir) in iconDirs) {
+        final sizeDistance = _directorySizeDistance(iconDir, size, scale);
+        if (minimalSizeDistance != null && sizeDistance >= minimalSizeDistance) {
+          continue;
         }
+        minimalSizeDistance = sizeDistance;
+        closestFile = File(path.join(iconDirPath, '$iconName.$extension'));
       }
     }
-
     return closestFile;
   }
 
-  bool _directoryMatchesSize(_IconDirectory dir, int iconSize, int iconScale) {
+  bool _directoryMatchesSize(_IconDirectoryDescription dir, int iconSize, int iconScale) {
     if (dir.scale != iconScale) {
       return false;
     }
@@ -243,23 +181,185 @@ class _IconTheme with _$_IconTheme {
       case _IconType.scaled:
         return dir.minSize <= iconSize && iconSize <= dir.maxSize;
       case _IconType.threshold:
-        return dir.size - dir.threshold <= iconSize &&
-            iconSize <= dir.size + dir.threshold;
+        return dir.size - dir.threshold <= iconSize && iconSize <= dir.size + dir.threshold;
     }
   }
 
-  File? _lookupFallbackIcon(String iconName, Set<String> extensions) {
-    for (Directory baseDir in cache.baseDirectories) {
-      for (String extension in extensions) {
-        FileSystemEntity? file = cache.baseDirectoryContents[
-            path.join(baseDir.path, '$iconName.$extension')];
-        if (file is File) {
-          return file;
-        }
+  File? _lookupFallbackIcon(String iconName, List<String> extensions) {
+    for (String extension in extensions) {
+      String filename = "$iconName.$extension";
+      File? icon = _fallbackIcons[filename];
+      if (icon != null) {
+        return icon;
       }
     }
     return null;
   }
+}
+
+Future<FreedesktopIconThemes> _index() async {
+  final baseDirectories = await whereExists(getIconBaseDirectories().map(Directory.new)).toList();
+  final baseDirectoriesLastChangedTimes = await _getBaseDirectoriesChangedTimes(baseDirectories);
+  Map<Directory, List<FileSystemEntity>> baseDirectoryContents = await _getBaseDirectoryContents(baseDirectories);
+
+  List<Directory> iconThemeDirectories = _getPotentialIconThemeDirectories(baseDirectoryContents).toList();
+  final iconThemes = await _parseIconThemes(iconThemeDirectories);
+  iconThemeDirectories = _getIconThemeDirectories(iconThemeDirectories, iconThemes).toList();
+
+  await _indexIconThemeIcons(iconThemeDirectories, iconThemes);
+  final fallbackIcons = await _indexFallbackIcons(baseDirectoryContents);
+
+  Map<IconQuery, File?> cachedMappings = {};
+
+  return FreedesktopIconThemes._new(
+    baseDirectories,
+    baseDirectoriesLastChangedTimes,
+    iconThemes,
+    fallbackIcons,
+    cachedMappings,
+  );
+}
+
+Future<void> _indexIconThemeIcons(List<Directory> iconThemeDirectories, Map<String, _IconTheme> themes) async {
+  for (Directory themeDir in iconThemeDirectories) {
+    String themeName = path.basename(themeDir.absolute.path);
+    _IconTheme theme = themes[themeName]!;
+
+    await for (FileSystemEntity entity in themeDir.list(recursive: true)) {
+      if (entity is File) {
+        String longIconDirectory = path.dirname(entity.path);
+        String iconDirectory = path.normalize(path.relative(longIconDirectory, from: themeDir.path));
+
+        _IconDirectoryDescription? iconDirectoryDescription = theme.iconDirectoryDescriptions[iconDirectory];
+
+        if (iconDirectoryDescription == null) {
+          continue;
+        }
+
+        String iconFileName = path.basename(entity.path);
+        theme.icons
+            .putIfAbsent(iconFileName, () => [])
+            .add((path.absolute(longIconDirectory), iconDirectoryDescription));
+      }
+    }
+  }
+}
+
+Future<Map<String, DateTime>> _getBaseDirectoriesChangedTimes(Iterable<Directory> baseDirectories) async {
+  return Map.fromEntries(await Future.wait(baseDirectories.map((dir) async {
+    var stat = await dir.stat();
+    return MapEntry(dir.absolute.path, stat.changed);
+  })));
+}
+
+Future<Map<Directory, List<FileSystemEntity>>> _getBaseDirectoryContents(Iterable<Directory> baseDirectories) async {
+  return Map.fromEntries(await Future.wait(baseDirectories.map((Directory dir) async {
+    return MapEntry(dir, await dir.list().toList());
+  })));
+}
+
+Future<Map<String, File>> _indexFallbackIcons(Map<Directory, List<FileSystemEntity>> baseDirectoryContents) async {
+  final Map<String, File> fallbackIcons = {};
+  Iterable<File> baseIconDirectoryFiles = baseDirectoryContents.values.map((e) => e.whereType<File>()).flattened;
+  for (File file in baseIconDirectoryFiles) {
+    fallbackIcons.putIfAbsent(path.basename(file.path), () => file);
+  }
+  return fallbackIcons;
+}
+
+Iterable<Directory> _getPotentialIconThemeDirectories(Map<Directory, List<FileSystemEntity>> baseDirectoryContents) {
+  // Some of these directories might not belong to a theme at all.
+  return baseDirectoryContents.values.map((e) => e.whereType<Directory>()).flattened;
+}
+
+Future<Map<String, _IconTheme>> _parseIconThemes(Iterable<Directory> iconThemeDirectories) async {
+  final Map<String, _IconThemeDescription> themeIndices = {};
+  for (Directory themeDir in iconThemeDirectories) {
+    String themeName = path.basename(themeDir.absolute.path);
+    if (themeIndices.containsKey(themeName)) {
+      continue;
+    }
+    _IconThemeDescription? iconThemeDescription = await _parseIconThemeDescription(themeDir.absolute.path);
+    if (iconThemeDescription != null) {
+      themeIndices[themeName] = iconThemeDescription;
+    }
+  }
+
+  final Map<String, _IconTheme> themes = themeIndices.map(
+    (name, themeDescription) => MapEntry(
+      name,
+      _IconTheme(
+        name: name,
+        iconDirectoryDescriptions: themeDescription.iconDirectoryDescriptions,
+      ),
+    ),
+  );
+
+  // Establish links between themes.
+  themes.forEach((name, theme) {
+    theme.parents = themeIndices[name]!.parents.map((parent) => themes[parent]).whereNotNull().toList();
+  });
+
+  return themes;
+}
+
+Iterable<Directory> _getIconThemeDirectories(
+  Iterable<Directory> iconThemeDirectories,
+  Map<String, _IconTheme> themes,
+) {
+  // Filter out directories that don't belong to any theme.
+  return iconThemeDirectories.where((themeDir) {
+    String themeName = path.basename(themeDir.absolute.path);
+    return themes.containsKey(themeName);
+  });
+}
+
+class IconQuery extends Equatable {
+  final String name;
+  final int size;
+  final int scale;
+  final List<String> extensions;
+  final List<String> preferredThemes;
+
+  IconQuery({
+    required this.name,
+    required this.size,
+    this.scale = 1,
+    required this.extensions,
+    this.preferredThemes = const [],
+  });
+
+  @override
+  List<Object?> get props => [name, size, scale, extensions];
+}
+
+class _IconThemeDescription extends Equatable {
+  final String name;
+  final List<String> parents;
+  final Map<String, _IconDirectoryDescription> iconDirectoryDescriptions;
+
+  _IconThemeDescription({
+    required this.name,
+    required this.parents,
+    required this.iconDirectoryDescriptions,
+  });
+
+  @override
+  List<Object?> get props => [name];
+}
+
+class _IconTheme {
+  final String name;
+  List<_IconTheme> parents = [];
+  final Map<String, _IconDirectoryDescription> iconDirectoryDescriptions;
+
+  // Map<icon file name, List<(icon dir path, icon dir descriptor)>>
+  final Map<String, List<(String, _IconDirectoryDescription)>> icons = {};
+
+  _IconTheme({
+    required this.name,
+    required this.iconDirectoryDescriptions,
+  });
 }
 
 enum _IconType {
@@ -272,15 +372,17 @@ enum _IconType {
   const _IconType(this.string);
 }
 
-class _IconDirectory {
-  int size;
-  _IconType type;
-  int scale;
-  int minSize;
-  int maxSize;
-  int threshold;
+class _IconDirectoryDescription extends Equatable {
+  final String name;
+  final int size;
+  final _IconType type;
+  final int scale;
+  final int minSize;
+  final int maxSize;
+  final int threshold;
 
-  _IconDirectory({
+  _IconDirectoryDescription({
+    required this.name,
     required this.size,
     _IconType? type,
     int? scale,
@@ -292,9 +394,12 @@ class _IconDirectory {
         minSize = minSize ?? size,
         maxSize = maxSize ?? size,
         threshold = threshold ?? 2;
+
+  @override
+  List<Object?> get props => [name, size, type, scale, minSize, maxSize, threshold];
 }
 
-int _directorySizeDistance(_IconDirectory dir, int iconSize, int iconScale) {
+int _directorySizeDistance(_IconDirectoryDescription dir, int iconSize, int iconScale) {
   switch (dir.type) {
     case _IconType.fixed:
       return (dir.size * dir.scale - iconSize * iconScale).abs();
@@ -302,7 +407,7 @@ int _directorySizeDistance(_IconDirectory dir, int iconSize, int iconScale) {
       if (iconSize * iconScale < dir.minSize * dir.scale) {
         return dir.minSize * dir.scale - iconSize * iconScale;
       }
-      if (iconSize * iconScale > dir.minSize * dir.scale) {
+      if (iconSize * iconScale > dir.maxSize * dir.scale) {
         return iconSize * iconScale - dir.maxSize * dir.scale;
       }
       return 0;
@@ -317,23 +422,52 @@ int _directorySizeDistance(_IconDirectory dir, int iconSize, int iconScale) {
   }
 }
 
-extension _CollectionExtension<T> on Iterable<T> {
-  T? firstWhereOrNull(bool Function(T element) test) {
-    for (var element in this) {
-      if (test(element)) return element;
+Future<_IconThemeDescription?> _parseIconThemeDescription(String themeDirectoryPath) async {
+  try {
+    final indexFile = File(path.join(themeDirectoryPath, "index.theme"));
+    final sections = parseSections(await indexFile.readAsString());
+    final entries = sections['Icon Theme']!;
+
+    Map<String, _IconDirectoryDescription> iconDirectoryDescriptions = {};
+    List<String> iconDirs = entries[IconThemeKey.directories.string]!.value.getStringList(',');
+
+    for (String iconDir in iconDirs) {
+      Map<String, Entry>? entries = sections[iconDir];
+      if (entries == null) {
+        continue;
+      }
+      try {
+        String? type = entries[IconThemeKey.type.string]?.value;
+
+        iconDirectoryDescriptions[iconDir] = _IconDirectoryDescription(
+          name: iconDir,
+          size: entries[IconThemeKey.size.string]!.value.getInteger()!,
+          type: _IconType.values.firstWhereOrNull((e) => e.string == type),
+          scale: entries[IconThemeKey.scale.string]?.value.getInteger(),
+          minSize: entries[IconThemeKey.minSize.string]?.value.getInteger(),
+          maxSize: entries[IconThemeKey.maxSize.string]?.value.getInteger(),
+          threshold: entries[IconThemeKey.threshold.string]?.value.getInteger(),
+        );
+      } catch (_) {
+        continue;
+      }
     }
+
+    List<String> parents = entries[IconThemeKey.inherits.string]?.value.getStringList(',') ?? [];
+    String themeName = path.basename(themeDirectoryPath);
+    if (themeName != 'hicolor' && !parents.contains('hicolor')) {
+      // hicolor must always be in the inheritance tree.
+      parents.add('hicolor');
+    }
+
+    final iconTheme = _IconThemeDescription(
+      name: path.basename(themeDirectoryPath),
+      parents: parents,
+      iconDirectoryDescriptions: iconDirectoryDescriptions,
+    );
+
+    return iconTheme;
+  } catch (_) {
     return null;
   }
-}
-
-class _IconThemeCache {
-  List<Directory> baseDirectories;
-  Map<String, FileSystemEntity> baseDirectoryContents;
-  Map<String, File> themeFiles;
-
-  _IconThemeCache({
-    required this.baseDirectories,
-    required this.themeFiles,
-    required this.baseDirectoryContents,
-  });
 }

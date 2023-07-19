@@ -8,62 +8,47 @@ void main() {
   final string = file.readAsStringSync();
   final desktopEntry = DesktopEntry.parse(string);
 
-  LocalizedDesktopEntry localizedDesktopEntry =
-      desktopEntry.localize(lang: 'fr', country: 'BE');
+  LocalizedDesktopEntry localizedDesktopEntry = desktopEntry.localize(lang: 'fr', country: 'BE');
 
   test('localization', () {
-    expect(
-        localizedDesktopEntry.entries[DesktopEntryKey.version.string], '1.0');
-    expect(localizedDesktopEntry.entries[DesktopEntryKey.name.string],
-        'Fichier de test 1');
-    expect(localizedDesktopEntry.entries[DesktopEntryKey.genericName.string],
-        'Desktop entry file');
-    expect(localizedDesktopEntry.entries[DesktopEntryKey.comment.string],
-        'Baguette');
-    expect(
-        localizedDesktopEntry.entries[DesktopEntryKey.terminal.string]
-            ?.getBoolean(),
-        false);
-    expect(
-        localizedDesktopEntry.entries[DesktopEntryKey.keywords.string]
-            ?.getStringList(),
-        ['Fichier']);
+    expect(localizedDesktopEntry.entries[DesktopEntryKey.version.string], '1.0');
+    expect(localizedDesktopEntry.entries[DesktopEntryKey.name.string], 'Fichier de test 1');
+    expect(localizedDesktopEntry.entries[DesktopEntryKey.genericName.string], 'Desktop entry file');
+    expect(localizedDesktopEntry.entries[DesktopEntryKey.comment.string], 'Baguette');
+    expect(localizedDesktopEntry.entries[DesktopEntryKey.terminal.string]?.getBoolean(), false);
+    expect(localizedDesktopEntry.entries[DesktopEntryKey.keywords.string]?.getStringList(), ['Fichier']);
   });
 
   test('actions', () {
-    expect(
-        localizedDesktopEntry.entries[DesktopEntryKey.actions.string]
-            ?.getStringList(),
-        ['new-window']);
+    expect(localizedDesktopEntry.entries[DesktopEntryKey.actions.string]?.getStringList(), ['new-window']);
     expect(localizedDesktopEntry.actions.length, 1);
-    expect(
-        desktopEntry.actions['new-window']?[DesktopEntryKey.name.string]?.value,
-        'Open new window');
-    expect(
-        localizedDesktopEntry.actions['new-window']
-            ?[DesktopEntryKey.name.string],
-        'Ouvrir nouvelle fenêtre');
+    expect(desktopEntry.actions['new-window']?[DesktopEntryKey.name.string]?.value, 'Open new window');
+    expect(localizedDesktopEntry.actions['new-window']?[DesktopEntryKey.name.string], 'Ouvrir nouvelle fenêtre');
   });
 
-  test('icon theme', () async {
-    final iconTheme = await FreedesktopIconTheme.load('Adwaita');
-    for (int i = 0; i < 1000; i++) {
-      File? file = iconTheme
-          .findIcon(name: 'input-touchpad', size: 32, extensions: {'png'});
-      assert(file != null);
-      assert(file!.path ==
-          '/usr/share/icons/hicolor/32x32/devices/input-touchpad.png');
-    }
-  });
-
-  test('absolute path icon', () async {
-    final iconTheme = await FreedesktopIconTheme.load('Adwaita');
-    File? file = iconTheme.findIcon(
-        name: '/usr/share/icons/hicolor/32x32/devices/input-touchpad.png',
+  test('icon name', () async {
+    final themes = FreedesktopIconThemes();
+    File? file = await themes.findIcon(
+      IconQuery(
+        name: 'input-touchpad',
         size: 32,
-        extensions: {'png'});
+        extensions: ['png'],
+      ),
+    );
     assert(file != null);
-    assert(file!.path ==
-        '/usr/share/icons/hicolor/32x32/devices/input-touchpad.png');
+    assert(file!.path == '/usr/share/icons/hicolor/32x32/devices/input-touchpad.png');
+  });
+
+  test('absolute icon path', () async {
+    final themes = FreedesktopIconThemes();
+    File? file = await themes.findIcon(
+      IconQuery(
+        name: '/usr/share/icons/hicolor/32x32/devices/input-touchpad.png',
+        size: 32, // doesn't matter
+        extensions: ['png'], // doesn't matter
+      ),
+    );
+    assert(file != null);
+    assert(file!.path == '/usr/share/icons/hicolor/32x32/devices/input-touchpad.png');
   });
 }

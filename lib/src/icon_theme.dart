@@ -199,22 +199,27 @@ class FreedesktopIconThemes {
 
 Future<FreedesktopIconThemes> _index() async {
   final baseDirectories = await whereExists(getIconBaseDirectories().map(Directory.new)).toList();
-  final baseDirectoriesLastChangedTimes = await _getBaseDirectoriesChangedTimes(baseDirectories);
+  final baseDirectoriesLastChangedTimes = _getBaseDirectoriesChangedTimes(baseDirectories);
   Map<Directory, List<FileSystemEntity>> baseDirectoryContents = await _getBaseDirectoryContents(baseDirectories);
 
-  List<Directory> iconThemeDirectories = _getPotentialIconThemeDirectories(baseDirectoryContents).toList();
-  final iconThemes = await _parseIconThemes(iconThemeDirectories);
-  iconThemeDirectories = _getIconThemeDirectories(iconThemeDirectories, iconThemes).toList();
+  // Some of these directories might not belong at all to a theme.
+  List<Directory> iconThemeDirectories = baseDirectoryContents.values.flattened.whereType<Directory>().toList();
+  final iconThemes = _parseIconThemes(iconThemeDirectories);
+  final iconsIndexed = iconThemes.then((iconThemes) async {
+    iconThemeDirectories = _getIconThemeDirectories(iconThemeDirectories, iconThemes).toList();
+    await _indexIconThemeIcons(iconThemeDirectories, iconThemes);
+  });
 
-  await _indexIconThemeIcons(iconThemeDirectories, iconThemes);
-  final fallbackIcons = await _indexFallbackIcons(baseDirectoryContents);
+  final fallbackIcons = _indexFallbackIcons(baseDirectoryContents);
 
   Map<IconQuery, File?> cachedMappings = {};
 
+  await iconsIndexed;
+
   return FreedesktopIconThemes._new(
     baseDirectories,
-    baseDirectoriesLastChangedTimes,
-    iconThemes,
+    await baseDirectoriesLastChangedTimes,
+    await iconThemes,
     fallbackIcons,
     cachedMappings,
   );
@@ -225,63 +230,61 @@ Future<void> _indexIconThemeIcons(List<Directory> iconThemeDirectories, Map<Stri
     String themeName = path.basename(themeDir.absolute.path);
     _IconTheme theme = themes[themeName]!;
 
-    await for (FileSystemEntity entity in themeDir.list(recursive: true)) {
-      if (entity is File) {
-        String longIconDirectory = path.dirname(entity.path);
-        String iconDirectory = path.normalize(path.relative(longIconDirectory, from: themeDir.path));
+    final files = themeDir.list(recursive: true).where((entity) => entity is File).map((event) => event as File);
+    await for (File file in files) {
+      String longIconDirectory = path.dirname(file.path);
+      String iconDirectory = path.normalize(path.relative(longIconDirectory, from: themeDir.path));
 
-        _IconDirectoryDescription? iconDirectoryDescription = theme.iconDirectoryDescriptions[iconDirectory];
+      _IconDirectoryDescription? iconDirectoryDescription = theme.iconDirectoryDescriptions[iconDirectory];
 
-        if (iconDirectoryDescription == null) {
-          continue;
-        }
-
-        String iconFileName = path.basename(entity.path);
-        theme.icons
-            .putIfAbsent(iconFileName, () => [])
-            .add((path.absolute(longIconDirectory), iconDirectoryDescription));
+      if (iconDirectoryDescription == null) {
+        continue;
       }
+
+      String iconFileName = path.basename(file.path);
+      theme.icons.putIfAbsent(iconFileName, () => []).add((path.absolute(longIconDirectory), iconDirectoryDescription));
     }
   }
 }
 
 Future<Map<String, DateTime>> _getBaseDirectoriesChangedTimes(Iterable<Directory> baseDirectories) async {
-  return Map.fromEntries(await Future.wait(baseDirectories.map((dir) async {
+  return Map.fromEntries(await baseDirectories.map((dir) async {
     var stat = await dir.stat();
     return MapEntry(dir.absolute.path, stat.changed);
-  })));
+  }).wait);
 }
 
 Future<Map<Directory, List<FileSystemEntity>>> _getBaseDirectoryContents(Iterable<Directory> baseDirectories) async {
-  return Map.fromEntries(await Future.wait(baseDirectories.map((Directory dir) async {
+  return Map.fromEntries(await baseDirectories.map((Directory dir) async {
     return MapEntry(dir, await dir.list().toList());
-  })));
+  }).wait);
 }
 
-Future<Map<String, File>> _indexFallbackIcons(Map<Directory, List<FileSystemEntity>> baseDirectoryContents) async {
+Map<String, File> _indexFallbackIcons(Map<Directory, List<FileSystemEntity>> baseDirectoryContents) {
   final Map<String, File> fallbackIcons = {};
-  Iterable<File> baseIconDirectoryFiles = baseDirectoryContents.values.map((e) => e.whereType<File>()).flattened;
+  Iterable<File> baseIconDirectoryFiles = baseDirectoryContents.values.flattened.whereType<File>();
   for (File file in baseIconDirectoryFiles) {
     fallbackIcons.putIfAbsent(path.basename(file.path), () => file);
   }
   return fallbackIcons;
 }
 
-Iterable<Directory> _getPotentialIconThemeDirectories(Map<Directory, List<FileSystemEntity>> baseDirectoryContents) {
-  // Some of these directories might not belong to a theme at all.
-  return baseDirectoryContents.values.map((e) => e.whereType<Directory>()).flattened;
-}
-
 Future<Map<String, _IconTheme>> _parseIconThemes(Iterable<Directory> iconThemeDirectories) async {
   final Map<String, _IconThemeDescription> themeIndices = {};
+  final List<Future<_IconThemeDescription?>> iconThemeDescriptions = [];
+
   for (Directory themeDir in iconThemeDirectories) {
     String themeName = path.basename(themeDir.absolute.path);
     if (themeIndices.containsKey(themeName)) {
       continue;
     }
-    _IconThemeDescription? iconThemeDescription = await _parseIconThemeDescription(themeDir.absolute.path);
+    final iconThemeDescription = _parseIconThemeDescription(themeDir.absolute.path);
+    iconThemeDescriptions.add(iconThemeDescription);
+  }
+
+  for (var iconThemeDescription in await iconThemeDescriptions.wait) {
     if (iconThemeDescription != null) {
-      themeIndices[themeName] = iconThemeDescription;
+      themeIndices[iconThemeDescription.name] = iconThemeDescription;
     }
   }
 
@@ -461,7 +464,7 @@ Future<_IconThemeDescription?> _parseIconThemeDescription(String themeDirectoryP
     }
 
     final iconTheme = _IconThemeDescription(
-      name: path.basename(themeDirectoryPath),
+      name: themeName,
       parents: parents,
       iconDirectoryDescriptions: iconDirectoryDescriptions,
     );

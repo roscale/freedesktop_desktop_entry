@@ -1,3 +1,4 @@
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'locale.dart';
@@ -6,11 +7,12 @@ part 'entry.freezed.dart';
 
 @freezed
 class Entry with _$Entry {
-  const Entry._();
+  Entry._();
 
-  const factory Entry({
+  factory Entry({
+    required String name,
     required String value,
-    @Default({}) Map<Locale, String> localizedValues,
+    required IMap<Locale, String> localizedValues,
   }) = _Entry;
 
   String localize({

@@ -16,8 +16,10 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$Entry {
+  String get name => throw _privateConstructorUsedError;
   String get value => throw _privateConstructorUsedError;
-  Map<Locale, String> get localizedValues => throw _privateConstructorUsedError;
+  IMap<Locale, String> get localizedValues =>
+      throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $EntryCopyWith<Entry> get copyWith => throw _privateConstructorUsedError;
@@ -28,7 +30,7 @@ abstract class $EntryCopyWith<$Res> {
   factory $EntryCopyWith(Entry value, $Res Function(Entry) then) =
       _$EntryCopyWithImpl<$Res, Entry>;
   @useResult
-  $Res call({String value, Map<Locale, String> localizedValues});
+  $Res call({String name, String value, IMap<Locale, String> localizedValues});
 }
 
 /// @nodoc
@@ -44,10 +46,15 @@ class _$EntryCopyWithImpl<$Res, $Val extends Entry>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? name = null,
     Object? value = null,
     Object? localizedValues = null,
   }) {
     return _then(_value.copyWith(
+      name: null == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String,
       value: null == value
           ? _value.value
           : value // ignore: cast_nullable_to_non_nullable
@@ -55,7 +62,7 @@ class _$EntryCopyWithImpl<$Res, $Val extends Entry>
       localizedValues: null == localizedValues
           ? _value.localizedValues
           : localizedValues // ignore: cast_nullable_to_non_nullable
-              as Map<Locale, String>,
+              as IMap<Locale, String>,
     ) as $Val);
   }
 }
@@ -66,7 +73,7 @@ abstract class _$$_EntryCopyWith<$Res> implements $EntryCopyWith<$Res> {
       __$$_EntryCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String value, Map<Locale, String> localizedValues});
+  $Res call({String name, String value, IMap<Locale, String> localizedValues});
 }
 
 /// @nodoc
@@ -78,18 +85,23 @@ class __$$_EntryCopyWithImpl<$Res> extends _$EntryCopyWithImpl<$Res, _$_Entry>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? name = null,
     Object? value = null,
     Object? localizedValues = null,
   }) {
     return _then(_$_Entry(
+      name: null == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String,
       value: null == value
           ? _value.value
           : value // ignore: cast_nullable_to_non_nullable
               as String,
       localizedValues: null == localizedValues
-          ? _value._localizedValues
+          ? _value.localizedValues
           : localizedValues // ignore: cast_nullable_to_non_nullable
-              as Map<Locale, String>,
+              as IMap<Locale, String>,
     ));
   }
 }
@@ -97,26 +109,20 @@ class __$$_EntryCopyWithImpl<$Res> extends _$EntryCopyWithImpl<$Res, _$_Entry>
 /// @nodoc
 
 class _$_Entry extends _Entry {
-  const _$_Entry(
-      {required this.value,
-      final Map<Locale, String> localizedValues = const {}})
-      : _localizedValues = localizedValues,
-        super._();
+  _$_Entry(
+      {required this.name, required this.value, required this.localizedValues})
+      : super._();
 
   @override
-  final String value;
-  final Map<Locale, String> _localizedValues;
+  final String name;
   @override
-  @JsonKey()
-  Map<Locale, String> get localizedValues {
-    if (_localizedValues is EqualUnmodifiableMapView) return _localizedValues;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(_localizedValues);
-  }
+  final String value;
+  @override
+  final IMap<Locale, String> localizedValues;
 
   @override
   String toString() {
-    return 'Entry(value: $value, localizedValues: $localizedValues)';
+    return 'Entry(name: $name, value: $value, localizedValues: $localizedValues)';
   }
 
   @override
@@ -124,14 +130,14 @@ class _$_Entry extends _Entry {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$_Entry &&
+            (identical(other.name, name) || other.name == name) &&
             (identical(other.value, value) || other.value == value) &&
-            const DeepCollectionEquality()
-                .equals(other._localizedValues, _localizedValues));
+            (identical(other.localizedValues, localizedValues) ||
+                other.localizedValues == localizedValues));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, value,
-      const DeepCollectionEquality().hash(_localizedValues));
+  int get hashCode => Object.hash(runtimeType, name, value, localizedValues);
 
   @JsonKey(ignore: true)
   @override
@@ -141,15 +147,18 @@ class _$_Entry extends _Entry {
 }
 
 abstract class _Entry extends Entry {
-  const factory _Entry(
-      {required final String value,
-      final Map<Locale, String> localizedValues}) = _$_Entry;
-  const _Entry._() : super._();
+  factory _Entry(
+      {required final String name,
+      required final String value,
+      required final IMap<Locale, String> localizedValues}) = _$_Entry;
+  _Entry._() : super._();
 
+  @override
+  String get name;
   @override
   String get value;
   @override
-  Map<Locale, String> get localizedValues;
+  IMap<Locale, String> get localizedValues;
   @override
   @JsonKey(ignore: true)
   _$$_EntryCopyWith<_$_Entry> get copyWith =>

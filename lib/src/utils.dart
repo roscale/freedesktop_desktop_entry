@@ -8,6 +8,10 @@ Iterable<String> getDataDirectories() sync* {
   yield* (Platform.environment['XDG_DATA_DIRS'] ?? '/usr/local/share:/usr/share').split(':');
 }
 
+/// Returns all potential directories where desktop entries might reside.
+/// Some directories might not exist.
+Iterable<String> getApplicationDirectories() => getDataDirectories().map((dir) => path.join(dir, 'applications'));
+
 // Only if the dollar sign does not have a backslash before it.
 final unescapedVariables = RegExp(r'(?<!\\)\$([a-zA-Z_]+[a-zA-Z0-9_]*)');
 

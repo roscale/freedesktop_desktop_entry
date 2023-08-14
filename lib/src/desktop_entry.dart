@@ -1,7 +1,7 @@
-import 'dart:collection';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart' hide Entry;
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'desktop_entry_key.dart';
@@ -9,8 +9,30 @@ import 'entry.dart';
 import 'extensions.dart';
 import 'locale.dart';
 import 'localized_desktop_entry.dart';
+import 'utils.dart';
 
 part 'desktop_entry.freezed.dart';
+
+Future<Map<String, DesktopEntry>> parseAllInstalledDesktopFiles() async {
+  Map<String, DesktopEntry> desktopEntries = {};
+
+  List<Future<DesktopEntry>> futures = [];
+
+  await for (final Directory dir in whereExists(getApplicationDirectories().map(Directory.new))) {
+    await for (FileSystemEntity entity in dir.list()) {
+      if (entity is File) {
+        Future<DesktopEntry> desktopEntry = DesktopEntry.parseFile(entity.absolute);
+        futures.add(desktopEntry);
+      }
+    }
+  }
+
+  for (DesktopEntry desktopEntry in await futures.wait) {
+    desktopEntries.putIfAbsent(desktopEntry.id!, () => desktopEntry);
+  }
+
+  return desktopEntries;
+}
 
 @freezed
 class DesktopEntry with _$DesktopEntry {
@@ -157,35 +179,44 @@ Map<String, Entry> parseEntries(Iterable<String> entryLines) {
   bool isEntryValid(EntryLine entryLine) {
     final (lang, country, encoding, modifier) = entryLine.locale;
     // If locale exists, lang must be non-null.
-    bool hasLocale = [lang, country, encoding, modifier].nonNulls.isNotEmpty;
+    bool hasLocale = lang != null || country != null || encoding != null || modifier != null;
     return entryLine.name != null && (!hasLocale || lang != null);
   }
 
+  // Accumulate into a mutable map because it's faster.
+  Map<String, Map<Locale, String>> localizedValuesMap = {};
+
   Entry combine(Entry? entry, tuple) {
-    entry ??= Entry(value: '');
+    entry ??= Entry(name: tuple.name, value: '', localizedValues: <Locale, String>{}.lockUnsafe);
 
     final (lang, country, encoding, modifier) = tuple.locale;
-    bool hasLocale = [lang, country, encoding, modifier].nonNulls.isNotEmpty;
+    bool hasLocale = lang != null || country != null || encoding != null || modifier != null;
 
     if (!hasLocale) {
       // Default value.
       return entry.copyWith(value: tuple.value);
     }
 
-    return entry.copyWith(
-      localizedValues: {
-        ...entry.localizedValues,
-        Locale(
-          lang: lang!,
-          country: country,
-          encoding: encoding,
-          modifier: modifier,
-        ): tuple.value,
-      },
-    );
+    final localizedValues = localizedValuesMap.putIfAbsent(entry.name, () => {});
+    localizedValues[Locale(
+      lang: lang!,
+      country: country,
+      encoding: encoding,
+      modifier: modifier,
+    )] = tuple.value;
+
+    return entry;
   }
 
-  return entryLines.map(readLine).where(isEntryValid).groupFoldBy((entryLine) => entryLine.name!, combine);
+  return entryLines
+      .map(readLine)
+      .where(isEntryValid)
+      .groupFoldBy((entryLine) => entryLine.name!, combine)
+      // Transform mutable maps into immutable ones.
+      .map((key, value) => MapEntry(
+            key,
+            value.copyWith(localizedValues: (localizedValuesMap[value.name] ?? const {}).lockUnsafe),
+          ));
 }
 
 Map<String, Map<String, Entry>> getActions(Map<String, Map<String, Entry>> sections, List<String>? declaredActions) {

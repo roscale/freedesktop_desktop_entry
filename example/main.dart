@@ -8,25 +8,18 @@ void main() async {
 
   DesktopEntry desktopEntry = await DesktopEntry.parseFile(file);
 
-  LocalizedDesktopEntry localizedDesktopEntry =
-      desktopEntry.localize(lang: 'fr', country: 'BE');
-  String? frenchName =
-      localizedDesktopEntry.entries[DesktopEntryKey.name.string];
+  LocalizedDesktopEntry localizedDesktopEntry = desktopEntry.localize(lang: 'fr', country: 'BE');
+  String? frenchName = localizedDesktopEntry.entries[DesktopEntryKey.name.string];
   print(frenchName);
 
-  String? defaultName =
-      desktopEntry.entries[DesktopEntryKey.name.string]?.value;
+  String? defaultName = desktopEntry.entries[DesktopEntryKey.name.string]?.value;
   print(defaultName);
 
-  List<String>? frenchKeywords = localizedDesktopEntry
-      .entries[DesktopEntryKey.keywords.string]
-      ?.getStringList();
+  List<String>? frenchKeywords = localizedDesktopEntry.entries[DesktopEntryKey.keywords.string]?.getStringList();
   print(frenchKeywords);
 
-  List<String>? englishKeywords = desktopEntry
-      .entries[DesktopEntryKey.keywords.string]
-      ?.localizedValues[Locale(lang: 'en')]
-      ?.getStringList();
+  List<String>? englishKeywords =
+      desktopEntry.entries[DesktopEntryKey.keywords.string]?.localizedValues[Locale(lang: 'en')]?.getStringList();
   print(englishKeywords);
 
   print(desktopEntry.id);
